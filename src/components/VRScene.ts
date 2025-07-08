@@ -16,7 +16,8 @@ import {
     WebXRState,
     GroundMesh,
     Mesh,
-    CannonJSPlugin
+    CannonJSPlugin,
+    Animation
   } from '@babylonjs/core';
   import * as CANNON from 'cannon-es';
   import { VRSceneConfig, VRSessionData } from '../types/VRTypes';
