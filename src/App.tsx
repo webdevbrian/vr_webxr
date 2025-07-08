@@ -135,7 +135,7 @@ function App() {
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white">Web-XR <> BabylonJS</h1>
+                <h1 className="text-3xl font-bold text-white">Web-XR & BabylonJS</h1>
                 <p className="text-purple-200">Babylon.js VR with Web-XR</p>
                 <p className="text-sm text-purple-300">by Brian Kinney (github.com/webdevbrian)</p>
               </div>
