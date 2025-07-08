@@ -24,6 +24,7 @@ import {
     AnimationGroup
   } from '@babylonjs/core';
   import '@babylonjs/core/Meshes/meshBuilder';
+  import '@babylonjs/core/Meshes/Builders/polyhedronBuilder';
   import * as CANNON from 'cannon-es';
   import { VRSceneConfig, VRSessionData } from '../types/VRTypes';
   import { VR_FEATURES } from '../utils/VRUtils';
