@@ -21,6 +21,7 @@ import {
   import * as CANNON from 'cannon-es';
   import { VRSceneConfig, VRSessionData } from '../types/VRTypes';
   import { VR_FEATURES } from '../utils/VRUtils';
+  import { AudioSpectrum } from './AudioSpectrum';
   
   interface PerformanceStats {
     fps: number;
@@ -35,6 +36,7 @@ import {
     private xrHelper: WebXRDefaultExperience | null = null;
     private vrSessionData: VRSessionData;
     private canvas: HTMLCanvasElement;
+    private audioSpectrum: AudioSpectrum | null = null;
   
     constructor(canvas: HTMLCanvasElement, config: VRSceneConfig) {
       this.canvas = canvas;
@@ -52,6 +54,7 @@ import {
       this.setupScene(config);
       this.createEnvironment();
       this.setupLighting();
+      this.setupAudioSpectrum();
       this.setupVR();
     }
   
@@ -170,6 +173,34 @@ import {
       pillarMaterial.roughness = 0.4;
       pillarMaterial.metallicFactor = 0.6;
       pillar.material = pillarMaterial;
+    }
+
+    private setupAudioSpectrum(): void {
+      // Create audio spectrum visualization
+      this.audioSpectrum = new AudioSpectrum(this.scene, {
+        bandCount: 8,
+        radius: 12, // Position outside the main scene objects
+        maxHeight: 4,
+        smoothing: 0.85
+      });
+
+      // Initialize audio automatically
+      this.initializeAudioSpectrum();
+    }
+
+    private async initializeAudioSpectrum(): Promise<void> {
+      if (!this.audioSpectrum) return;
+
+      try {
+        const success = await this.audioSpectrum.initializeAudio();
+        if (success) {
+          console.log('Audio spectrum visualization started');
+        } else {
+          console.warn('Failed to start audio spectrum visualization');
+        }
+      } catch (error) {
+        console.error('Error initializing audio spectrum:', error);
+      }
     }
   
     private setupLighting(): void {
@@ -385,6 +416,10 @@ import {
   
     public dispose(): void {
       this.stopHeadTracking();
+      if (this.audioSpectrum) {
+        this.audioSpectrum.dispose();
+        this.audioSpectrum = null;
+      }
       this.scene.dispose();
       this.engine.dispose();
     }
