@@ -55,6 +55,7 @@ import {
       this.createEnvironment();
       this.setupLighting();
       this.setupAudioSpectrum();
+      this.createSouthwestLogo();
       this.setupVR();
     }
   
@@ -173,6 +174,119 @@ import {
       pillarMaterial.roughness = 0.4;
       pillarMaterial.metallicFactor = 0.6;
       pillar.material = pillarMaterial;
+    }
+
+    private createSouthwestLogo(): void {
+      // Create Southwest Airlines logo using geometric shapes
+      // Position it safely away from other elements at x: -15, y: 3, z: -5
+      
+      // Create the heart shape base (simplified as two spheres and a triangle)
+      const heartLeft = MeshBuilder.CreateSphere("heartLeft", { diameter: 1.2 }, this.scene);
+      heartLeft.position.set(-15.6, 3.3, -5);
+      
+      const heartRight = MeshBuilder.CreateSphere("heartRight", { diameter: 1.2 }, this.scene);
+      heartRight.position.set(-14.4, 3.3, -5);
+      
+      // Create triangle for bottom of heart
+      const heartBottom = MeshBuilder.CreateCylinder("heartBottom", {
+        height: 0.2,
+        diameterTop: 0,
+        diameterBottom: 1.8,
+        tessellation: 3
+      }, this.scene);
+      heartBottom.position.set(-15, 2.4, -5);
+      heartBottom.rotation.z = Math.PI; // Flip triangle
+      
+      // Create Southwest text representation (simplified as boxes)
+      const textBlocks = [];
+      const letters = ['S', 'W', 'A']; // Simplified representation
+      
+      for (let i = 0; i < 3; i++) {
+        const letterBlock = MeshBuilder.CreateBox(`letter_${letters[i]}`, {
+          width: 0.4,
+          height: 0.6,
+          depth: 0.1
+        }, this.scene);
+        letterBlock.position.set(-16 + (i * 0.7), 1.5, -5);
+        textBlocks.push(letterBlock);
+      }
+      
+      // Create Southwest brand colors material (orange/red and blue)
+      const heartMaterial = new PBRMaterial("southwestHeart", this.scene);
+      heartMaterial.baseColor = new Color3(1, 0.4, 0.1); // Southwest orange/red
+      heartMaterial.roughness = 0.2;
+      heartMaterial.metallicFactor = 0.1;
+      heartMaterial.emissiveColor = new Color3(0.2, 0.08, 0.02); // Subtle glow
+      
+      const textMaterial = new PBRMaterial("southwestText", this.scene);
+      textMaterial.baseColor = new Color3(0.1, 0.3, 0.8); // Southwest blue
+      textMaterial.roughness = 0.3;
+      textMaterial.metallicFactor = 0.2;
+      textMaterial.emissiveColor = new Color3(0.02, 0.06, 0.16); // Subtle blue glow
+      
+      // Apply materials
+      heartLeft.material = heartMaterial;
+      heartRight.material = heartMaterial;
+      heartBottom.material = heartMaterial;
+      
+      textBlocks.forEach(block => {
+        block.material = textMaterial;
+      });
+      
+      // Add dedicated lighting for the logo
+      const logoLight = new DirectionalLight(
+        "logoLight",
+        new Vector3(0.5, -0.5, 0.5),
+        this.scene
+      );
+      logoLight.intensity = 0.6;
+      logoLight.position = new Vector3(-12, 6, -2);
+      
+      // Create a subtle spotlight effect
+      const logoSpotlight = new HemisphericLight(
+        "logoSpotlight",
+        new Vector3(-1, 1, 1),
+        this.scene
+      );
+      logoSpotlight.intensity = 0.3;
+      logoSpotlight.diffuse = new Color3(1, 0.9, 0.8); // Warm light
+      
+      // Add subtle animation to make it more engaging
+      const logoAnimation = Animation.CreateAndStartAnimation(
+        "logoFloat",
+        heartLeft,
+        "position.y",
+        30,
+        120,
+        3.3,
+        3.5,
+        Animation.ANIMATIONLOOPMODE_CYCLE
+      );
+      
+      // Apply same animation to other heart parts
+      Animation.CreateAndStartAnimation(
+        "logoFloat2",
+        heartRight,
+        "position.y",
+        30,
+        120,
+        3.3,
+        3.5,
+        Animation.ANIMATIONLOOPMODE_CYCLE
+      );
+      
+      Animation.CreateAndStartAnimation(
+        "logoFloat3",
+        heartBottom,
+        "position.y",
+        30,
+        120,
+        2.4,
+        2.6,
+        Animation.ANIMATIONLOOPMODE_CYCLE
+      );
+      
+      console.log('Southwest Airlines logo created at position (-15, 3, -5)');
     }
 
     private setupAudioSpectrum(): void {
