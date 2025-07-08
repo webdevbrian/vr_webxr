@@ -59,6 +59,8 @@ export const VRInterface: React.FC<VRInterfaceProps> = ({
     }
   };
 
+  // Handle the setting changes
+
   const handleSettingsChange = (key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
     
