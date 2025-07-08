@@ -16,7 +16,12 @@ import {
     WebXRState,
     GroundMesh,
     Mesh,
-    CannonJSPlugin
+    CannonJSPlugin,
+    RectAreaLight,
+    SpotLight,
+    PointLight,
+    Animation,
+    AnimationGroup
   } from '@babylonjs/core';
   import * as CANNON from 'cannon-es';
   import { VRSceneConfig, VRSessionData } from '../types/VRTypes';
@@ -35,6 +40,7 @@ import {
     private xrHelper: WebXRDefaultExperience | null = null;
     private vrSessionData: VRSessionData;
     private canvas: HTMLCanvasElement;
+    private lightAnimations: AnimationGroup[] = [];
   
     constructor(canvas: HTMLCanvasElement, config: VRSceneConfig) {
       this.canvas = canvas;
@@ -50,167 +56,276 @@ import {
       };
   
       this.setupScene(config);
-      this.createEnvironment();
-      this.setupLighting();
+      this.createAtmosphericEnvironment();
+      this.setupBeautifulLighting();
       this.setupVR();
     }
   
     private setupScene(config: VRSceneConfig): void {
-      // Create camera
+      // Create camera with better positioning for the dim scene
       this.camera = new ArcRotateCamera(
         "camera",
         -Math.PI / 2,
         Math.PI / 2.5,
-        10,
+        15,
         Vector3.Zero(),
         this.scene
       );
       this.camera.attachControl(this.canvas, true);
+      this.camera.setTarget(Vector3.Zero());
   
       // Enable physics if requested
       if (config.enablePhysics) {
         this.scene.enablePhysics(new Vector3(0, -9.81, 0), new CannonJSPlugin(true, 10, CANNON));
       }
   
-      // Create skybox
-      if (config.skyboxTexture) {
-        this.createSkybox(config.skyboxTexture);
-      }
+      // Set ambient color to very dark for atmospheric effect
+      this.scene.ambientColor = new Color3(0.05, 0.05, 0.1);
+      
+      // Create atmospheric fog
+      this.scene.fogMode = Scene.FOGMODE_EXP2;
+      this.scene.fogColor = new Color3(0.1, 0.1, 0.2);
+      this.scene.fogDensity = 0.02;
     }
   
-    private createEnvironment(): void {
-      // Create ground
-      const ground = MeshBuilder.CreateGround("ground", { width: 20, height: 20 }, this.scene);
+    private createAtmosphericEnvironment(): void {
+      // Create a larger, darker ground
+      const ground = MeshBuilder.CreateGround("ground", { width: 50, height: 50 }, this.scene);
       const groundMaterial = new PBRMaterial("groundMaterial", this.scene);
-      groundMaterial.baseColor = new Color3(0.2, 0.3, 0.2);
-      groundMaterial.roughness = 0.8;
+      groundMaterial.baseColor = new Color3(0.1, 0.1, 0.15);
+      groundMaterial.roughness = 0.9;
       groundMaterial.metallicFactor = 0.1;
+      groundMaterial.emissiveColor = new Color3(0.02, 0.02, 0.05);
       ground.material = groundMaterial;
       ground.receiveShadows = true;
   
-      // Create some interesting objects
-      this.createDemoObjects();
-      this.createInteractiveElements();
+      // Create atmospheric objects
+      this.createAtmosphericObjects();
+      this.createLightPanels();
+      this.createFloatingElements();
     }
   
-    private createDemoObjects(): void {
-      // Create a series of cubes with different materials
-      for (let i = 0; i < 5; i++) {
-        const box = MeshBuilder.CreateBox(`box${i}`, { size: 1 }, this.scene);
-        box.position.x = (i - 2) * 3;
-        box.position.y = 0.5;
-        box.position.z = 0;
-  
-        const material = new PBRMaterial(`boxMaterial${i}`, this.scene);
-        material.baseColor = new Color3(
-          Math.random(),
-          Math.random(),
-          Math.random()
-        );
-        material.roughness = Math.random();
-        material.metallicFactor = Math.random();
-        box.material = material;
-      }
-  
-      // Create a sphere
-      const sphere = MeshBuilder.CreateSphere("sphere", { diameter: 2 }, this.scene);
-      sphere.position.set(0, 1, 5);
-      
-      const sphereMaterial = new PBRMaterial("sphereMaterial", this.scene);
-      sphereMaterial.baseColor = new Color3(1, 0.5, 0);
-      sphereMaterial.roughness = 0.2;
-      sphereMaterial.metallicFactor = 0.8;
-      sphere.material = sphereMaterial;
-  
-      // Create a torus
-      const torus = MeshBuilder.CreateTorus("torus", { 
-        diameter: 3, 
-        thickness: 0.5 
-      }, this.scene);
-      torus.position.set(-5, 2, 0);
-      torus.rotation.x = Math.PI / 4;
-      
-      const torusMaterial = new PBRMaterial("torusMaterial", this.scene);
-      torusMaterial.baseColor = new Color3(0.5, 0, 1);
-      torusMaterial.roughness = 0.1;
-      torusMaterial.metallicFactor = 0.9;
-      torus.material = torusMaterial;
-    }
-  
-    private createInteractiveElements(): void {
-      // Create floating platforms
-      for (let i = 0; i < 3; i++) {
-        const platform = MeshBuilder.CreateCylinder(`platform${i}`, {
-          height: 0.2,
-          diameter: 2
+    private createAtmosphericObjects(): void {
+      // Create mysterious monoliths
+      for (let i = 0; i < 4; i++) {
+        const angle = (i * Math.PI * 2) / 4;
+        const radius = 12;
+        
+        const monolith = MeshBuilder.CreateBox(`monolith${i}`, { 
+          width: 2, 
+          height: 8, 
+          depth: 0.5 
         }, this.scene);
         
-        platform.position.set(
-          Math.cos(i * Math.PI * 2 / 3) * 8,
-          1 + i * 0.5,
-          Math.sin(i * Math.PI * 2 / 3) * 8
-        );
-  
-        const platformMaterial = new PBRMaterial(`platformMaterial${i}`, this.scene);
-        platformMaterial.baseColor = new Color3(0.8, 0.8, 0.2);
-        platformMaterial.roughness = 0.3;
-        platformMaterial.metallicFactor = 0.1;
-        platform.material = platformMaterial;
+        monolith.position.x = Math.cos(angle) * radius;
+        monolith.position.z = Math.sin(angle) * radius;
+        monolith.position.y = 4;
+        
+        const monolithMaterial = new PBRMaterial(`monolithMaterial${i}`, this.scene);
+        monolithMaterial.baseColor = new Color3(0.05, 0.05, 0.1);
+        monolithMaterial.roughness = 0.3;
+        monolithMaterial.metallicFactor = 0.8;
+        monolithMaterial.emissiveColor = new Color3(0.1, 0.05, 0.2);
+        monolith.material = monolithMaterial;
       }
   
-      // Create a central pillar
-      const pillar = MeshBuilder.CreateCylinder("pillar", {
-        height: 6,
-        diameter: 0.8
-      }, this.scene);
-      pillar.position.y = 3;
+      // Create central crystal structure
+      const crystal = MeshBuilder.CreateOctahedron("crystal", { size: 3 }, this.scene);
+      crystal.position.y = 2;
       
-      const pillarMaterial = new PBRMaterial("pillarMaterial", this.scene);
-      pillarMaterial.baseColor = new Color3(0.6, 0.6, 0.6);
-      pillarMaterial.roughness = 0.4;
-      pillarMaterial.metallicFactor = 0.6;
-      pillar.material = pillarMaterial;
+      const crystalMaterial = new PBRMaterial("crystalMaterial", this.scene);
+      crystalMaterial.baseColor = new Color3(0.2, 0.1, 0.4);
+      crystalMaterial.roughness = 0.1;
+      crystalMaterial.metallicFactor = 0.9;
+      crystalMaterial.emissiveColor = new Color3(0.3, 0.1, 0.6);
+      crystal.material = crystalMaterial;
+      
+      // Animate crystal rotation
+      const crystalAnimation = Animation.CreateAndStartAnimation(
+        "crystalRotation",
+        crystal,
+        "rotation.y",
+        30,
+        120,
+        0,
+        Math.PI * 2,
+        Animation.ANIMATIONLOOPMODE_CYCLE
+      );
     }
   
-    private setupLighting(): void {
-      // Ambient light
+    private createLightPanels(): void {
+      // Create rectangular light panels using rectangular area lights
+      const panelPositions = [
+        { x: -8, y: 6, z: 0, rotY: 0 },
+        { x: 8, y: 6, z: 0, rotY: Math.PI },
+        { x: 0, y: 6, z: -8, rotY: Math.PI / 2 },
+        { x: 0, y: 6, z: 8, rotY: -Math.PI / 2 }
+      ];
+  
+      panelPositions.forEach((pos, index) => {
+        // Create the physical panel
+        const panel = MeshBuilder.CreatePlane(`lightPanel${index}`, { 
+          width: 4, 
+          height: 2 
+        }, this.scene);
+        
+        panel.position.set(pos.x, pos.y, pos.z);
+        panel.rotation.y = pos.rotY;
+        
+        const panelMaterial = new PBRMaterial(`panelMaterial${index}`, this.scene);
+        panelMaterial.baseColor = new Color3(0.1, 0.1, 0.1);
+        panelMaterial.emissiveColor = new Color3(0.8, 0.4, 0.2);
+        panelMaterial.roughness = 0.1;
+        panel.material = panelMaterial;
+        
+        // Create rectangular area light
+        const rectLight = new RectAreaLight(
+          `rectLight${index}`,
+          new Color3(1, 0.6, 0.3),
+          2, // intensity
+          4, // width
+          2  // height
+        );
+        
+        rectLight.position.set(pos.x, pos.y, pos.z);
+        rectLight.rotation.y = pos.rotY;
+        rectLight.lookAt(Vector3.Zero());
+        
+        this.scene.addLight(rectLight);
+        
+        // Add subtle animation to light intensity
+        const lightAnimation = Animation.CreateAndStartAnimation(
+          `lightIntensity${index}`,
+          rectLight,
+          "intensity",
+          30,
+          90,
+          2,
+          3,
+          Animation.ANIMATIONLOOPMODE_YOYO
+        );
+      });
+    }
+  
+    private createFloatingElements(): void {
+      // Create floating orbs with point lights
+      for (let i = 0; i < 6; i++) {
+        const angle = (i * Math.PI * 2) / 6;
+        const radius = 6 + Math.random() * 4;
+        const height = 3 + Math.random() * 4;
+        
+        const orb = MeshBuilder.CreateSphere(`orb${i}`, { diameter: 0.5 }, this.scene);
+        orb.position.x = Math.cos(angle) * radius;
+        orb.position.z = Math.sin(angle) * radius;
+        orb.position.y = height;
+        
+        const orbMaterial = new PBRMaterial(`orbMaterial${i}`, this.scene);
+        orbMaterial.baseColor = new Color3(0.1, 0.1, 0.1);
+        orbMaterial.emissiveColor = new Color3(0.4, 0.8, 1.0);
+        orbMaterial.roughness = 0.1;
+        orb.material = orbMaterial;
+        
+        // Add point light to each orb
+        const orbLight = new PointLight(`orbLight${i}`, orb.position, this.scene);
+        orbLight.diffuse = new Color3(0.4, 0.8, 1.0);
+        orbLight.intensity = 0.5;
+        orbLight.range = 8;
+        
+        // Animate orb floating
+        const floatAnimation = Animation.CreateAndStartAnimation(
+          `orbFloat${i}`,
+          orb,
+          "position.y",
+          30,
+          60 + i * 10,
+          height,
+          height + 1,
+          Animation.ANIMATIONLOOPMODE_YOYO
+        );
+        
+        // Animate light intensity
+        const orbLightAnimation = Animation.CreateAndStartAnimation(
+          `orbLightIntensity${i}`,
+          orbLight,
+          "intensity",
+          30,
+          45 + i * 5,
+          0.3,
+          0.8,
+          Animation.ANIMATIONLOOPMODE_YOYO
+        );
+      }
+    }
+  
+    private setupBeautifulLighting(): void {
+      // Very dim ambient light for base illumination
       const hemisphericLight = new HemisphericLight(
         "hemisphericLight",
         new Vector3(0, 1, 0),
         this.scene
       );
-      hemisphericLight.intensity = 0.4;
+      hemisphericLight.intensity = 0.1;
+      hemisphericLight.diffuse = new Color3(0.2, 0.2, 0.4);
+      hemisphericLight.specular = new Color3(0.1, 0.1, 0.2);
   
-      // Directional light for shadows
-      const directionalLight = new DirectionalLight(
-        "directionalLight",
-        new Vector3(-1, -1, -1),
+      // Main atmospheric spotlight from above
+      const mainSpotlight = new SpotLight(
+        "mainSpotlight",
+        new Vector3(0, 15, 0),
+        new Vector3(0, -1, 0),
+        Math.PI / 3,
+        2,
         this.scene
       );
-      directionalLight.intensity = 0.8;
-      directionalLight.position = new Vector3(10, 10, 10);
-  
-      // Shadow generator
-      const shadowGenerator = new ShadowGenerator(1024, directionalLight);
+      mainSpotlight.diffuse = new Color3(0.6, 0.4, 0.8);
+      mainSpotlight.intensity = 1.5;
+      mainSpotlight.range = 25;
+      
+      // Create shadow generator for main light
+      const shadowGenerator = new ShadowGenerator(2048, mainSpotlight);
       shadowGenerator.useExponentialShadowMap = true;
+      shadowGenerator.darkness = 0.7;
       
       // Add shadow casters
       this.scene.meshes.forEach(mesh => {
-        if (mesh.name.includes('box') || mesh.name.includes('sphere') || mesh.name.includes('torus')) {
+        if (mesh.name.includes('monolith') || mesh.name.includes('crystal') || mesh.name.includes('orb')) {
           shadowGenerator.addShadowCaster(mesh);
         }
       });
-    }
   
-    private createSkybox(textureUrl: string): void {
-      const skybox = MeshBuilder.CreateSphere("skyBox", { diameter: 100 }, this.scene);
-      const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
-      
-      skyboxMaterial.backFaceCulling = false;
-      skyboxMaterial.diffuseColor = new Color3(0.2, 0.6, 1);
-      skyboxMaterial.specularColor = new Color3(0, 0, 0);
-      skybox.material = skyboxMaterial;
-      skybox.infiniteDistance = true;
+      // Rim lighting spots for dramatic effect
+      const rimLights = [
+        { pos: new Vector3(-15, 8, -15), color: new Color3(1, 0.3, 0.3) },
+        { pos: new Vector3(15, 8, -15), color: new Color3(0.3, 1, 0.3) },
+        { pos: new Vector3(-15, 8, 15), color: new Color3(0.3, 0.3, 1) },
+        { pos: new Vector3(15, 8, 15), color: new Color3(1, 1, 0.3) }
+      ];
+  
+      rimLights.forEach((lightData, index) => {
+        const rimLight = new SpotLight(
+          `rimLight${index}`,
+          lightData.pos,
+          Vector3.Zero().subtract(lightData.pos).normalize(),
+          Math.PI / 4,
+          2,
+          this.scene
+        );
+        rimLight.diffuse = lightData.color;
+        rimLight.intensity = 0.8;
+        rimLight.range = 20;
+        
+        // Animate rim light intensity
+        const rimAnimation = Animation.CreateAndStartAnimation(
+          `rimLightIntensity${index}`,
+          rimLight,
+          "intensity",
+          30,
+          120 + index * 30,
+          0.3,
+          1.2,
+          Animation.ANIMATIONLOOPMODE_YOYO
+        );
+      });
     }
   
     private async setupVR(): Promise<void> {
@@ -321,6 +436,7 @@ import {
       this.vrSessionData.headRotation = { x: 0, y: 0, z: 0 };
       this.vrSessionData.controllers = [];
     }
+    
     public async enterVR(): Promise<boolean> {
       if (!this.xrHelper) {
         console.error('VR not initialized');
@@ -385,6 +501,13 @@ import {
   
     public dispose(): void {
       this.stopHeadTracking();
+      
+      // Stop all animations
+      this.lightAnimations.forEach(animation => {
+        animation.stop();
+        animation.dispose();
+      });
+      
       this.scene.dispose();
       this.engine.dispose();
     }
