@@ -38,7 +38,9 @@ export class AudioSpectrum {
   }
 
   private createSpectrumBars(): void {
-    const angleStep = (Math.PI * 2) / this.config.bandCount;
+    const spacing = 1.5; // Distance between bars
+    const totalWidth = (this.config.bandCount - 1) * spacing;
+    const startX = -totalWidth / 2; // Center the line
     
     for (let i = 0; i < this.config.bandCount; i++) {
       // Create cylindrical bar
@@ -48,11 +50,9 @@ export class AudioSpectrum {
         tessellation: 16
       }, this.scene);
 
-      // Position bars in a circle
-      const angle = i * angleStep;
-      const x = Math.cos(angle) * this.config.radius;
-      const z = Math.sin(angle) * this.config.radius;
-      bar.position.set(x, 0.25, z);
+      // Position bars in a line
+      const x = startX + (i * spacing);
+      bar.position.set(x, 0.25, 8); // Fixed Z position in front of user
 
       // Create beautiful gradient material
       const material = new PBRMaterial(`spectrumMaterial_${i}`, this.scene);
