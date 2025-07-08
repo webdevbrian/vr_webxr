@@ -136,7 +136,7 @@ function App() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">VR Explorer</h1>
-                <p className="text-purple-200">Babylon.js VR Experience Example</p>
+                <p className="text-purple-200">Babylon.js 3D & Web-XR</p>
                 <p className="text-sm text-purple-300">by Brian Kinney (github.com/webdevbrian)</p>
               </div>
             </div>

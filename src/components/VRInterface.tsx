@@ -78,7 +78,6 @@ export const VRInterface: React.FC<VRInterfaceProps> = ({
         </div>
         <div>
           <h2 className="text-2xl font-bold text-gray-800">VR Experience</h2>
-          <p className="text-gray-600">Babylon.js VR Example by Brian Kinney</p>
         </div>
       </div>
 
