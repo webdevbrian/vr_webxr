@@ -179,28 +179,10 @@ import {
       // Create audio spectrum visualization
       this.audioSpectrum = new AudioSpectrum(this.scene, {
         bandCount: 8,
-        radius: 12, // Position outside the main scene objects
-        maxHeight: 4,
-        smoothing: 0.85
+        radius: 12, // Position outside main scene objects
+        maxHeight: 4, // Maximum bar height
+        smoothingFactor: 0.85 // Smooth animation
       });
-
-      // Initialize audio automatically
-      this.initializeAudioSpectrum();
-    }
-
-    private async initializeAudioSpectrum(): Promise<void> {
-      if (!this.audioSpectrum) return;
-
-      try {
-        const success = await this.audioSpectrum.initializeAudio();
-        if (success) {
-          console.log('Audio spectrum visualization started');
-        } else {
-          console.warn('Failed to start audio spectrum visualization');
-        }
-      } catch (error) {
-        console.error('Error initializing audio spectrum:', error);
-      }
     }
   
     private setupLighting(): void {
@@ -416,10 +398,13 @@ import {
   
     public dispose(): void {
       this.stopHeadTracking();
+      
+      // Dispose audio spectrum
       if (this.audioSpectrum) {
         this.audioSpectrum.dispose();
         this.audioSpectrum = null;
       }
+      
       this.scene.dispose();
       this.engine.dispose();
     }
