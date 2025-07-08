@@ -111,7 +111,7 @@ export class AudioSpectrum {
       // Create analyser
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 256; // Higher resolution for better frequency analysis
-      this.analyser.smoothingTimeConstant = 0.8;
+      this.analyser.smoothingTimeConstant = 0.3; // More responsive to audio changes
       
       // Connect microphone to analyser
       this.microphone = this.audioContext.createMediaStreamSource(stream);
@@ -167,11 +167,11 @@ export class AudioSpectrum {
       }
       
       const average = sum / (endIndex - startIndex);
-      const normalized = average / 255; // Normalize to 0-1
+      const normalized = Math.min((average / 255) * 2.5, 1); // Amplify sensitivity by 2.5x
       
       // Apply smoothing
-      this.smoothedData[i] = this.smoothedData[i] * this.config.smoothingFactor + 
-                            normalized * (1 - this.config.smoothingFactor);
+      this.smoothedData[i] = this.smoothedData[i] * 0.7 + 
+                            normalized * 0.3; // Faster response time
     }
   }
 
