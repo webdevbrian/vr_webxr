@@ -553,7 +553,7 @@ import {
       this.scene.dispose();
       this.engine.dispose();
     }
-  }
+
   private createAdditionalTexturedObjects(): void {
     // Create textured wall panels
     for (let i = 0; i < 3; i++) {
@@ -640,3 +640,4 @@ import {
       tile.material = tileMaterial;
     }
   }
+}
