@@ -404,7 +404,7 @@ import {
         // Load tank model
         const tankConfig: ModelConfig = {
           path: '/models/',
-          fileName: 'tank.glb',
+          fileName: 'tank.gltf',
           position: new Vector3(-15, 0, -5), // Left side, behind current objects
           scale: new Vector3(2, 2, 2), // Real-sized for VR viewing
           enablePhysics: true,
