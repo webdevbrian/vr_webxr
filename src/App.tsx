@@ -101,7 +101,10 @@ function App() {
             ref={canvasRef}
             className="w-full h-full block"
             style={{ 
+              width: '100%',
+              height: '100vh',
               minHeight: '500px',
+              display: 'block',
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
             }}
           />
