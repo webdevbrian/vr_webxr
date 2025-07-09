@@ -40,12 +40,7 @@ import {
   
     constructor(canvas: HTMLCanvasElement, config: VRSceneConfig) {
       this.canvas = canvas;
-      this.engine = new Engine(canvas, true, { 
-        preserveDrawingBuffer: true, 
-        stencil: true,
-        antialias: true,
-        alpha: false
-      });
+      this.engine = new Engine(canvas, true);
       this.scene = new Scene(this.engine);
       
       this.vrSessionData = {
@@ -392,8 +387,13 @@ import {
     }
   
     public startRenderLoop(): void {
+      // Ensure canvas is properly sized before starting render loop
+      this.engine.resize();
+      
       this.engine.runRenderLoop(() => {
-        this.scene.render();
+        if (this.scene && this.scene.activeCamera) {
+          this.scene.render();
+        }
       });
     }
   
