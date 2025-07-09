@@ -398,9 +398,20 @@ import {
 
     private async loadModels(): Promise<void> {
       try {
-        // Model loading temporarily disabled due to corrupted GLB file
-        // TODO: Replace tank.glb with a valid GLB model file
-        console.log('Model loading skipped - tank.glb file needs to be replaced with valid GLB format');
+        // Load tank model
+        const tankConfig: ModelConfig = {
+          path: '/src/models/',
+          fileName: 'tank.glb',
+          position: new Vector3(-15, 0, -5), // Left side, behind current objects
+          scale: new Vector3(2, 2, 2), // Real-sized for VR viewing
+          enablePhysics: true,
+          physicsType: PhysicsImpostor.BoxImpostor,
+          physicsMass: 0, // Solid, immovable
+          textureBasePath: '/src/models/textures/texture_tank'
+        };
+        
+        await this.modelLoader.loadModel(tankConfig);
+        console.log('Tank model loaded successfully');
         
       } catch (error) {
         console.error('Failed to load models:', error);
