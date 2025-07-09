@@ -66,7 +66,7 @@ import {
   
       this.setupScene(config);
       this.createCyberpunkEnvironment();
-      this.setupCyberpunkLighting();
+      this.setupDramaticLighting();
       this.setupPostProcessing();
       this.setupAudioSpectrum();
       this.setupVR();
