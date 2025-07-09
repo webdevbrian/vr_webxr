@@ -89,6 +89,9 @@ import {
         this.scene
       );
       this.camera.attachControl(this.canvas, true);
+
+      // Prevent HDR environment texture issues that cause rgbdDecode shader errors
+      this.scene.environmentTexture = null;
   
       // Enable physics if requested
       if (config.enablePhysics) {
@@ -400,14 +403,14 @@ import {
       try {
         // Load tank model
         const tankConfig: ModelConfig = {
-          path: '/src/models/',
+          path: '/models/',
           fileName: 'tank.glb',
           position: new Vector3(-15, 0, -5), // Left side, behind current objects
           scale: new Vector3(2, 2, 2), // Real-sized for VR viewing
           enablePhysics: true,
           physicsType: PhysicsImpostor.BoxImpostor,
           physicsMass: 0, // Solid, immovable
-          textureBasePath: '/src/models/textures/texture_tank'
+          textureBasePath: '/models/textures/texture_tank'
         };
         
         await this.modelLoader.loadModel(tankConfig);
