@@ -33,6 +33,7 @@ import {
   import { VRSceneConfig, VRSessionData } from '../types/VRTypes';
   import { VR_FEATURES } from '../utils/VRUtils';
   import { AudioSpectrum } from './AudioSpectrum';
+  import { ModelLoader, ModelConfig } from '../utils/ModelLoader';
   
   interface PerformanceStats {
     fps: number;
@@ -51,6 +52,7 @@ import {
     private spectrumLights: PointLight[] = [];
     private reflectionProbe: ReflectionProbe | null = null;
     private renderPipeline: DefaultRenderingPipeline | null = null;
+    private modelLoader: ModelLoader;
   
     constructor(canvas: HTMLCanvasElement, config: VRSceneConfig) {
       this.canvas = canvas;
@@ -66,11 +68,13 @@ import {
       };
   
       this.setupScene(config);
+      this.modelLoader = new ModelLoader(this.scene);
       this.createCyberpunkEnvironment();
       this.setupDramaticLighting();
       this.createAdditionalTexturedObjects();
       this.setupPostProcessing();
       this.setupAudioSpectrum();
+      this.loadModels();
       this.setupVR();
     }
   
@@ -127,7 +131,7 @@ import {
     }
   
     private createWetStreetGround(): void {
-      const ground = MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, this.scene);
+      const ground = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, this.scene);
       const groundMaterial = new PBRMaterial("groundMaterial", this.scene);
       
       // Load wet asphalt texture
@@ -390,6 +394,29 @@ import {
       // Add dramatic atmospheric lighting
       this.createDramaticAtmosphericLights();
       this.createVolumetricLighting();
+    }
+
+    private async loadModels(): Promise<void> {
+      try {
+        // Load tank model - positioned on left side and behind current objects
+        const tankConfig: ModelConfig = {
+          path: "/src/models/",
+          fileName: "tank.glb",
+          position: new Vector3(-15, 0, -15), // Left side and behind
+          scale: new Vector3(1.8, 1.8, 1.8), // Realistic tank size for VR
+          rotation: new Vector3(0, Math.PI / 4, 0), // Slight angle for better viewing
+          enablePhysics: true,
+          physicsType: PhysicsImpostor.BoxImpostor,
+          physicsMass: 0, // Static/immovable
+          textureBasePath: "/src/models/textures/texture_tank"
+        };
+
+        await this.modelLoader.loadModel(tankConfig);
+        console.log('Tank model loaded successfully');
+        
+      } catch (error) {
+        console.error('Failed to load models:', error);
+      }
     }
   
     private createDramaticAtmosphericLights(): void {
@@ -779,6 +806,11 @@ import {
       if (this.audioSpectrum) {
         this.audioSpectrum.dispose();
         this.audioSpectrum = null;
+      }
+      
+      // Dispose model loader
+      if (this.modelLoader) {
+        this.modelLoader.dispose();
       }
       
       this.scene.dispose();
