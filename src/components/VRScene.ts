@@ -500,12 +500,7 @@ import {
       }
       
       // Enable depth of field for cinematic effect (subtle)
-      this.renderPipeline.depthOfFieldEnabled = true;
-      if (this.renderPipeline.depthOfField) {
-        this.renderPipeline.depthOfField.focusDistance = 10; // Focus distance
-        this.renderPipeline.depthOfField.focalLength = 50; // Focal length
-        this.renderPipeline.depthOfField.fStop = 8; // Subtle blur
-      }
+      this.renderPipeline.depthOfFieldEnabled = false; // Disable to prevent blur
     }
   
     private async setupVR(): Promise<void> {
