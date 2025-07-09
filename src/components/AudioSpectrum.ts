@@ -10,6 +10,15 @@ import {
   PointLight
 } from '@babylonjs/core';
 
+interface ParticleData {
+  mesh: Mesh;
+  velocity: Vector3;
+  life: number;
+  maxLife: number;
+  active: boolean;
+  cylinderIndex: number;
+}
+
 export interface AudioSpectrumConfig {
   bandCount: number;
   radius: number;
@@ -29,16 +38,179 @@ export class AudioSpectrum {
   private config: AudioSpectrumConfig;
   private smoothedData: number[] = [];
   private animationFrame: number | null = null;
+  private particlePool: ParticleData[] = [];
+  private particleEmissionTimers: number[] = [];
+  private maxParticlesPerCylinder = 10;
 
   constructor(scene: Scene, config: AudioSpectrumConfig) {
     this.scene = scene;
     this.config = config;
     this.smoothedData = new Array(config.bandCount).fill(0);
+    this.particleEmissionTimers = new Array(config.bandCount).fill(0);
     
     this.createSpectrumBars();
+    this.initializeParticlePool();
     this.initializeAudio();
   }
 
+  private initializeParticlePool(): void {
+    const totalParticles = this.config.bandCount * this.maxParticlesPerCylinder;
+    
+    for (let i = 0; i < totalParticles; i++) {
+      const cylinderIndex = Math.floor(i / this.maxParticlesPerCylinder);
+      
+      // Create small circular particle mesh
+      const particle = MeshBuilder.CreateSphere(`particle_${i}`, {
+        diameter: 0.1,
+        segments: 8 // Low poly for performance
+      }, this.scene);
+      
+      // Create glowing material
+      const material = new PBRMaterial(`particleMaterial_${i}`, this.scene);
+      const progress = cylinderIndex / (this.config.bandCount - 1);
+      const baseColor = this.getCyberpunkColor(progress);
+      
+      material.baseColor = new Color3(baseColor.r * 0.3, baseColor.g * 0.3, baseColor.b * 0.3);
+      material.roughness = 0.1;
+      material.metallicFactor = 0.8;
+      material.emissiveColor = new Color3(baseColor.r * 1.2, baseColor.g * 1.2, baseColor.b * 1.2);
+      material.alpha = 0.8;
+      
+      particle.material = material;
+      particle.setEnabled(false); // Start disabled
+      
+      // Create particle data
+      const particleData: ParticleData = {
+        mesh: particle,
+        velocity: new Vector3(0, 0, 0),
+        life: 0,
+        maxLife: 3.0, // 3 seconds lifespan
+        active: false,
+        cylinderIndex: cylinderIndex
+      };
+      
+      this.particlePool.push(particleData);
+    }
+  }
+
+  private getInactiveParticle(cylinderIndex: number): ParticleData | null {
+    // Find an inactive particle for the specific cylinder
+    for (const particle of this.particlePool) {
+      if (!particle.active && particle.cylinderIndex === cylinderIndex) {
+        return particle;
+      }
+    }
+    return null;
+  }
+
+  private emitParticle(cylinderIndex: number, intensity: number): void {
+    const particle = this.getInactiveParticle(cylinderIndex);
+    if (!particle) return;
+    
+    const bar = this.spectrumBars[cylinderIndex];
+    
+    // Position at top of cylinder with slight random offset
+    const topY = bar.position.y + (bar.scaling.y * 0.5);
+    particle.mesh.position.set(
+      bar.position.x + (Math.random() - 0.5) * 0.3, // Small random X offset
+      topY,
+      bar.position.z + (Math.random() - 0.5) * 0.3  // Small random Z offset
+    );
+    
+    // Set upward velocity with slight randomness
+    particle.velocity.set(
+      (Math.random() - 0.5) * 0.5, // Slight horizontal drift
+      1.0 + Math.random() * 0.5,   // Upward velocity
+      (Math.random() - 0.5) * 0.5  // Slight horizontal drift
+    );
+    
+    // Reset particle properties
+    particle.life = particle.maxLife;
+    particle.active = true;
+    particle.mesh.setEnabled(true);
+    
+    // Set initial scale and alpha
+    particle.mesh.scaling.setAll(1.0);
+    if (particle.mesh.material instanceof PBRMaterial) {
+      particle.mesh.material.alpha = 0.8;
+    }
+  }
+
+  private updateParticles(deltaTime: number): void {
+    for (const particle of this.particlePool) {
+      if (!particle.active) continue;
+      
+      // Update lifetime
+      particle.life -= deltaTime;
+      
+      if (particle.life <= 0) {
+        // Particle died
+        particle.active = false;
+        particle.mesh.setEnabled(false);
+        continue;
+      }
+      
+      // Update position
+      particle.mesh.position.addInPlace(particle.velocity.scale(deltaTime));
+      
+      // Apply slight gravity and air resistance
+      particle.velocity.y -= 0.2 * deltaTime; // Slight downward acceleration
+      particle.velocity.scaleInPlace(0.98); // Air resistance
+      
+      // Fade out over time
+      const lifeRatio = particle.life / particle.maxLife;
+      const alpha = Math.min(0.8, lifeRatio * 1.2); // Fade out in last 2/3 of life
+      const scale = 0.5 + (lifeRatio * 0.5); // Shrink over time
+      
+      particle.mesh.scaling.setAll(scale);
+      if (particle.mesh.material instanceof PBRMaterial) {
+        particle.mesh.material.alpha = alpha;
+        
+        // Adjust emissive intensity based on life
+        const emissiveIntensity = lifeRatio * 1.2;
+        const baseColor = particle.mesh.material.baseColor;
+        particle.mesh.material.emissiveColor = new Color3(
+          (baseColor.r / 0.3) * emissiveIntensity,
+          (baseColor.g / 0.3) * emissiveIntensity,
+          (baseColor.b / 0.3) * emissiveIntensity
+        );
+      }
+    }
+  }
+
+  private updateParticleEmission(deltaTime: number): void {
+    for (let i = 0; i < this.config.bandCount; i++) {
+      const intensity = this.smoothedData[i];
+      
+      // Update emission timer
+      this.particleEmissionTimers[i] -= deltaTime;
+      
+      // Base emission rate (continuous small amounts)
+      const baseEmissionRate = 0.3; // Emit every 0.3 seconds at minimum
+      
+      // Intensity-based emission rate (more frequent with higher intensity)
+      const intensityEmissionRate = Math.max(0.05, 0.3 - (intensity * 0.25)); // Faster emission with higher intensity
+      
+      const emissionRate = Math.min(baseEmissionRate, intensityEmissionRate);
+      
+      if (this.particleEmissionTimers[i] <= 0) {
+        // Emit particle
+        this.emitParticle(i, intensity);
+        
+        // Reset timer
+        this.particleEmissionTimers[i] = emissionRate;
+        
+        // Small chance for burst emission when intensity is high
+        if (intensity > 0.7 && Math.random() < 0.3) {
+          // Emit 1-2 additional particles for burst effect
+          const burstCount = Math.floor(Math.random() * 2) + 1;
+          for (let burst = 0; burst < burstCount; burst++) {
+            setTimeout(() => this.emitParticle(i, intensity), burst * 50); // Stagger burst particles
+          }
+        }
+      }
+    }
+  }
   private createSpectrumBars(): void {
     const spacing = 1.5; // Distance between bars
     const totalWidth = (this.config.bandCount - 1) * spacing;
@@ -149,7 +321,13 @@ export class AudioSpectrum {
   }
 
   private startVisualization(): void {
+    let lastTime = performance.now();
+    
     const animate = () => {
+      const currentTime = performance.now();
+      const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+      lastTime = currentTime;
+      
       if (!this.analyser || !this.frequencyData) return;
       
       // Get frequency data
@@ -160,6 +338,10 @@ export class AudioSpectrum {
       
       // Update visual elements
       this.updateSpectrumBars();
+      
+      // Update particle system
+      this.updateParticles(deltaTime);
+      this.updateParticleEmission(deltaTime);
       
       // Continue animation
       this.animationFrame = requestAnimationFrame(animate);
@@ -230,8 +412,13 @@ export class AudioSpectrum {
   private createFallbackAnimation(): void {
     // Create a gentle sine wave animation as fallback
     let time = 0;
+    let lastTime = performance.now();
     
     const animate = () => {
+      const currentTime = performance.now();
+      const deltaTime = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+      
       time += 0.02;
       
       for (let i = 0; i < this.spectrumBars.length; i++) {
@@ -267,6 +454,10 @@ export class AudioSpectrum {
         
         bar.rotation.y += 0.002;
       }
+      
+      // Update particle system for fallback too
+      this.updateParticles(deltaTime);
+      this.updateParticleEmission(deltaTime);
       
       this.animationFrame = requestAnimationFrame(animate);
     };
@@ -309,9 +500,18 @@ export class AudioSpectrum {
       light.dispose();
     });
     
+    // Dispose particle system
+    this.particlePool.forEach(particle => {
+      particle.mesh.dispose();
+      if (particle.mesh.material) {
+        particle.mesh.material.dispose();
+      }
+    });
+    
     this.spectrumBars = [];
     this.materials = [];
     this.spectrumLights = [];
+    this.particlePool = [];
     
     console.log('Audio spectrum disposed');
   }
