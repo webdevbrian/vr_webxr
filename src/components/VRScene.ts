@@ -60,7 +60,7 @@ import {
   
       this.setupScene(config);
       this.createCyberpunkEnvironment();
-      this.setupLighting();
+      this.setupCyberpunkLighting();
       this.setupAudioSpectrum();
       this.setupVR();
     }
