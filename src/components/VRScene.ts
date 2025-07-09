@@ -398,21 +398,9 @@ import {
 
     private async loadModels(): Promise<void> {
       try {
-        // Load tank model - positioned on left side and behind current objects
-        const tankConfig: ModelConfig = {
-          path: "/src/models/",
-          fileName: "tank.glb",
-          position: new Vector3(-15, 0, -15), // Left side and behind
-          scale: new Vector3(1.8, 1.8, 1.8), // Realistic tank size for VR
-          rotation: new Vector3(0, Math.PI / 4, 0), // Slight angle for better viewing
-          enablePhysics: true,
-          physicsType: PhysicsImpostor.BoxImpostor,
-          physicsMass: 0, // Static/immovable
-          textureBasePath: "/src/models/textures/texture_tank"
-        };
-
-        await this.modelLoader.loadModel(tankConfig);
-        console.log('Tank model loaded successfully');
+        // Model loading temporarily disabled due to corrupted GLB file
+        // TODO: Replace tank.glb with a valid GLB model file
+        console.log('Model loading skipped - tank.glb file needs to be replaced with valid GLB format');
         
       } catch (error) {
         console.error('Failed to load models:', error);
@@ -576,7 +564,7 @@ import {
       // Create default rendering pipeline with advanced effects
       this.renderPipeline = new DefaultRenderingPipeline(
         "defaultPipeline",
-        true, // HDR enabled
+        false, // HDR disabled to prevent shader compilation errors
         this.scene,
         [this.camera]
       );
