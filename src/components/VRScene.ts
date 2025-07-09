@@ -145,6 +145,13 @@ import {
       
       ground.material = groundMaterial;
       ground.receiveShadows = true;
+      
+      // Add physics impostor to make ground solid
+      ground.physicsImpostor = new PhysicsImpostor(ground, PhysicsImpostor.BoxImpostor, {
+        mass: 0, // Static ground (immovable)
+        restitution: 0.2, // Low bounce for asphalt
+        friction: 0.9 // High friction for good grip
+      }, this.scene);
     }
 
     private createCyberpunkObjects(): void {
