@@ -115,20 +115,14 @@ import {
       const groundMaterial = new PBRMaterial("groundMaterial", this.scene);
       
       // Load wet asphalt texture
-      const asphaltTexture = new Texture("https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg", this.scene);
+      const asphaltTexture = new Texture("https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg?auto=compress&cs=tinysrgb&w=512", this.scene);
       asphaltTexture.uOffset = 0;
       asphaltTexture.vOffset = 0;
       asphaltTexture.uScale = 4;
       asphaltTexture.vScale = 4;
       
-      // Create normal map for surface detail
-      const normalTexture = new Texture("https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg", this.scene);
-      normalTexture.uScale = 4;
-      normalTexture.vScale = 4;
-      
       groundMaterial.baseTexture = asphaltTexture;
-      groundMaterial.normalTexture = normalTexture;
-      groundMaterial.baseColor = new Color3(0.2, 0.2, 0.25); // Slightly brighter for texture visibility
+      groundMaterial.baseColor = new Color3(0.8, 0.8, 0.8); // White tint to show texture
       groundMaterial.roughness = 0.2; // Smooth for wet look but not mirror-like
       groundMaterial.metallicFactor = 0.7; // High metallic for wet reflection
       groundMaterial.emissiveColor = new Color3(0.01, 0.01, 0.02);
@@ -162,20 +156,14 @@ import {
         const material = new PBRMaterial(`hexMaterial${i}`, this.scene);
         
         // Load metal texture for hexagonal objects
-        const metalTexture = new Texture("https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg", this.scene);
+        const metalTexture = new Texture("https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg?auto=compress&cs=tinysrgb&w=512", this.scene);
         metalTexture.uScale = 2;
         metalTexture.vScale = 2;
-        
-        // Create normal map for metal surface detail
-        const metalNormal = new Texture("https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg", this.scene);
-        metalNormal.uScale = 2;
-        metalNormal.vScale = 2;
         
         const color = colors[i];
         
         material.baseTexture = metalTexture;
-        material.normalTexture = metalNormal;
-        material.baseColor = new Color3(color.r * 0.4, color.g * 0.4, color.b * 0.4); // Slightly brighter for texture visibility
+        material.baseColor = new Color3(color.r * 0.8, color.g * 0.8, color.b * 0.8); // Brighter tint to show texture
         material.roughness = 0.3; // Slightly rougher for realistic metal
         material.metallicFactor = 0.9;
         material.emissiveColor = new Color3(color.r * 0.3, color.g * 0.3, color.b * 0.3); // Reduced for texture visibility
@@ -189,11 +177,10 @@ import {
       const sphereMaterial = new PBRMaterial("sphereMaterial", this.scene);
       
       // Load glass/crystal texture for holographic sphere
-      const glassTexture = new Texture("https://images.pexels.com/photos/1108101/pexels-photo-1108101.jpeg", this.scene);
-      glassTexture.hasAlpha = true;
+      const glassTexture = new Texture("https://images.pexels.com/photos/1108101/pexels-photo-1108101.jpeg?auto=compress&cs=tinysrgb&w=512", this.scene);
       
       sphereMaterial.baseTexture = glassTexture;
-      sphereMaterial.baseColor = new Color3(0.2, 0.2, 0.4); // Brighter for texture visibility
+      sphereMaterial.baseColor = new Color3(0.6, 0.6, 0.8); // Much brighter to show texture
       sphereMaterial.roughness = 0.05; // Very smooth for glass-like appearance
       sphereMaterial.metallicFactor = 0.9;
       sphereMaterial.emissiveColor = new Color3(0, 0.6, 0.8); // Reduced for texture visibility
@@ -211,12 +198,12 @@ import {
       const ringMaterial = new PBRMaterial("ringMaterial", this.scene);
       
       // Load neon/plastic texture for ring
-      const neonTexture = new Texture("https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg", this.scene);
+      const neonTexture = new Texture("https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg?auto=compress&cs=tinysrgb&w=512", this.scene);
       neonTexture.uScale = 3;
       neonTexture.vScale = 1;
       
       ringMaterial.baseTexture = neonTexture;
-      ringMaterial.baseColor = new Color3(0.3, 0.2, 0.4); // Brighter for texture visibility
+      ringMaterial.baseColor = new Color3(0.8, 0.6, 0.9); // Much brighter to show texture
       ringMaterial.roughness = 0.2; // Slightly rougher for realistic neon material
       ringMaterial.metallicFactor = 0.9;
       ringMaterial.emissiveColor = new Color3(0.8, 0, 0.8); // Reduced for texture visibility
@@ -241,18 +228,12 @@ import {
         const platformMaterial = new PBRMaterial(`platformMaterial${i}`, this.scene);
         
         // Load concrete texture for platforms
-        const concreteTexture = new Texture("https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg", this.scene);
+        const concreteTexture = new Texture("https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg?auto=compress&cs=tinysrgb&w=512", this.scene);
         concreteTexture.uScale = 2;
         concreteTexture.vScale = 2;
         
-        // Create normal map for concrete surface detail
-        const concreteNormal = new Texture("https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg", this.scene);
-        concreteNormal.uScale = 2;
-        concreteNormal.vScale = 2;
-        
         platformMaterial.baseTexture = concreteTexture;
-        platformMaterial.normalTexture = concreteNormal;
-        platformMaterial.baseColor = new Color3(0.2, 0.2, 0.2); // Brighter for texture visibility
+        platformMaterial.baseColor = new Color3(0.7, 0.7, 0.7); // Much brighter to show texture
         platformMaterial.roughness = 0.4; // Rougher for concrete appearance
         platformMaterial.metallicFactor = 0.8;
         platformMaterial.emissiveColor = new Color3(0, 0.3, 0.6); // Reduced for texture visibility
@@ -276,18 +257,12 @@ import {
         const pillarMaterial = new PBRMaterial(`pillarMaterial${i}`, this.scene);
         
         // Load brushed metal texture for pillars
-        const brushedMetalTexture = new Texture("https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg", this.scene);
+        const brushedMetalTexture = new Texture("https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg?auto=compress&cs=tinysrgb&w=512", this.scene);
         brushedMetalTexture.uScale = 1;
         brushedMetalTexture.vScale = 4; // Stretch vertically for pillar effect
         
-        // Create normal map for brushed metal surface detail
-        const brushedMetalNormal = new Texture("https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg", this.scene);
-        brushedMetalNormal.uScale = 1;
-        brushedMetalNormal.vScale = 4;
-        
         pillarMaterial.baseTexture = brushedMetalTexture;
-        pillarMaterial.normalTexture = brushedMetalNormal;
-        pillarMaterial.baseColor = new Color3(0.1, 0.1, 0.1); // Brighter for texture visibility
+        pillarMaterial.baseColor = new Color3(0.6, 0.6, 0.6); // Much brighter to show texture
         pillarMaterial.roughness = 0.4; // Rougher for brushed metal appearance
         pillarMaterial.metallicFactor = 0.7;
         
