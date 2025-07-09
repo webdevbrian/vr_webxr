@@ -26,7 +26,8 @@ import {
     PostProcess,
     Effect,
     SSAORenderingPipeline,
-    DefaultRenderingPipeline
+    DefaultRenderingPipeline,
+    PhysicsImpostor
   } from '@babylonjs/core';
   import * as CANNON from 'cannon-es';
   import { VRSceneConfig, VRSessionData } from '../types/VRTypes';
@@ -183,6 +184,9 @@ import {
         material.metallicFactor = 0.9;
         material.emissiveColor = new Color3(color.r * 0.2, color.g * 0.2, color.b * 0.2); // Minimal emissive
         hex.material = material;
+        
+        // Add physics imposter for collision
+        hex.physicsImpostor = new PhysicsImpostor(hex, PhysicsImpostor.CylinderImpostor, { mass: 0, restitution: 0.3 }, this.scene);
       }
   
       // Create a central holographic sphere
@@ -201,6 +205,9 @@ import {
       sphereMaterial.emissiveColor = new Color3(0, 0.4, 0.6); // Minimal cyan glow
       sphereMaterial.alpha = 0.8; // Semi-transparent for holographic effect
       sphere.material = sphereMaterial;
+      
+      // Add physics imposter for collision
+      sphere.physicsImpostor = new PhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, { mass: 0, restitution: 0.5 }, this.scene);
   
       // Create floating neon rings
       const ring = MeshBuilder.CreateTorus("ring", { 
@@ -222,6 +229,9 @@ import {
       ringMaterial.roughness = 0.2; // Slightly rougher for realistic neon material
       ringMaterial.metallicFactor = 0.9;
       ring.material = ringMaterial;
+      
+      // Add physics imposter for collision
+      ring.physicsImpostor = new PhysicsImpostor(ring, PhysicsImpostor.TorusImpostor, { mass: 0, restitution: 0.4 }, this.scene);
     }
   
     private createCyberpunkStructures(): void {
