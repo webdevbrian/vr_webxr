@@ -6,7 +6,8 @@ import {
   Vector3,
   Mesh,
   Animation,
-  AnimationKeys
+  AnimationKeys,
+  PointLight
 } from '@babylonjs/core';
 
 export interface AudioSpectrumConfig {
@@ -24,6 +25,7 @@ export class AudioSpectrum {
   private frequencyData: Uint8Array | null = null;
   private spectrumBars: Mesh[] = [];
   private materials: PBRMaterial[] = [];
+  private spectrumLights: PointLight[] = [];
   private config: AudioSpectrumConfig;
   private smoothedData: number[] = [];
   private animationFrame: number | null = null;
@@ -57,41 +59,56 @@ export class AudioSpectrum {
       // Create beautiful gradient material
       const material = new PBRMaterial(`spectrumMaterial_${i}`, this.scene);
       
-      // Color based on frequency band (purple to cyan gradient)
-      const hue = (i / this.config.bandCount) * 0.7; // 0 to 0.7 for purple to cyan
-      const baseColor = this.hslToRgb(hue, 0.8, 0.6);
+      // Cyberpunk neon colors (electric blue to hot pink)
+      const progress = i / (this.config.bandCount - 1);
+      const baseColor = this.getCyberpunkColor(progress);
       
-      material.baseColor = new Color3(baseColor.r, baseColor.g, baseColor.b);
-      material.roughness = 0.3;
-      material.metallicFactor = 0.1;
-      material.emissiveColor = new Color3(baseColor.r * 0.2, baseColor.g * 0.2, baseColor.b * 0.2);
+      material.baseColor = new Color3(baseColor.r * 0.2, baseColor.g * 0.2, baseColor.b * 0.2);
+      material.roughness = 0.1;
+      material.metallicFactor = 0.9;
+      material.emissiveColor = new Color3(baseColor.r * 0.5, baseColor.g * 0.5, baseColor.b * 0.5);
       
       bar.material = material;
       
+      // Create point light for each spectrum bar
+      const light = new PointLight(`spectrumLight_${i}`, bar.position.clone(), this.scene);
+      light.diffuse = new Color3(baseColor.r, baseColor.g, baseColor.b);
+      light.intensity = 0.5;
+      light.range = 8;
+      
       this.spectrumBars.push(bar);
       this.materials.push(material);
+      this.spectrumLights.push(light);
     }
   }
 
-  private hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
-    const c = (1 - Math.abs(2 * l - 1)) * s;
-    const x = c * (1 - Math.abs((h * 6) % 2 - 1));
-    const m = l - c / 2;
-    
-    let r = 0, g = 0, b = 0;
-    
-    if (h < 1/6) { r = c; g = x; b = 0; }
-    else if (h < 2/6) { r = x; g = c; b = 0; }
-    else if (h < 3/6) { r = 0; g = c; b = x; }
-    else if (h < 4/6) { r = 0; g = x; b = c; }
-    else if (h < 5/6) { r = x; g = 0; b = c; }
-    else { r = c; g = 0; b = x; }
-    
-    return {
-      r: r + m,
-      g: g + m,
-      b: b + m
-    };
+  private getCyberpunkColor(progress: number): { r: number; g: number; b: number } {
+    // Electric blue to hot pink gradient
+    if (progress < 0.33) {
+      // Electric blue to cyan
+      const t = progress / 0.33;
+      return {
+        r: 0 * (1 - t) + 0 * t,
+        g: 0.5 * (1 - t) + 1 * t,
+        b: 1
+      };
+    } else if (progress < 0.66) {
+      // Cyan to magenta
+      const t = (progress - 0.33) / 0.33;
+      return {
+        r: 0 * (1 - t) + 1 * t,
+        g: 1 * (1 - t) + 0 * t,
+        b: 1
+      };
+    } else {
+      // Magenta to hot pink
+      const t = (progress - 0.66) / 0.34;
+      return {
+        r: 1,
+        g: 0 * (1 - t) + 0.2 * t,
+        b: 1 * (1 - t) + 0.8 * t
+      };
+    }
   }
 
   private async initializeAudio(): Promise<void> {
@@ -179,6 +196,7 @@ export class AudioSpectrum {
     for (let i = 0; i < this.spectrumBars.length; i++) {
       const bar = this.spectrumBars[i];
       const material = this.materials[i];
+      const light = this.spectrumLights[i];
       const intensity = this.smoothedData[i];
       
       // Scale bar height based on audio intensity
@@ -186,16 +204,22 @@ export class AudioSpectrum {
       bar.scaling.y = targetHeight;
       bar.position.y = targetHeight / 2;
       
-      // Update emissive color for glow effect
-      const baseEmissive = 0.2;
-      const emissiveIntensity = baseEmissive + (intensity * 0.8);
+      // Update light position to follow bar
+      light.position.y = bar.position.y + targetHeight / 2;
+      
+      // Update emissive color and light intensity for glow effect
+      const baseEmissive = 0.3;
+      const emissiveIntensity = baseEmissive + (intensity * 1.2);
       const baseColor = material.baseColor;
       
       material.emissiveColor = new Color3(
-        baseColor.r * emissiveIntensity,
-        baseColor.g * emissiveIntensity,
-        baseColor.b * emissiveIntensity
+        (baseColor.r / 0.2) * emissiveIntensity,
+        (baseColor.g / 0.2) * emissiveIntensity,
+        (baseColor.b / 0.2) * emissiveIntensity
       );
+      
+      // Update light intensity based on audio
+      light.intensity = 0.5 + (intensity * 2.0); // More dramatic lighting
       
       // Subtle rotation for visual interest
       bar.rotation.y += 0.005 * (1 + intensity);
@@ -212,6 +236,7 @@ export class AudioSpectrum {
       for (let i = 0; i < this.spectrumBars.length; i++) {
         const bar = this.spectrumBars[i];
         const material = this.materials[i];
+        const light = this.spectrumLights[i];
         
         // Create wave pattern
         const wave = Math.sin(time + i * 0.5) * 0.5 + 0.5;
@@ -222,15 +247,21 @@ export class AudioSpectrum {
         bar.scaling.y = targetHeight;
         bar.position.y = targetHeight / 2;
         
+        // Update light position
+        light.position.y = bar.position.y + targetHeight / 2;
+        
         // Update glow
         const baseColor = material.baseColor;
-        const emissiveIntensity = 0.2 + (intensity * 0.3);
+        const emissiveIntensity = 0.3 + (intensity * 0.5);
         
         material.emissiveColor = new Color3(
-          baseColor.r * emissiveIntensity,
-          baseColor.g * emissiveIntensity,
-          baseColor.b * emissiveIntensity
+          (baseColor.r / 0.2) * emissiveIntensity,
+          (baseColor.g / 0.2) * emissiveIntensity,
+          (baseColor.b / 0.2) * emissiveIntensity
         );
+        
+        // Update light intensity
+        light.intensity = 0.5 + (intensity * 1.5);
         
         bar.rotation.y += 0.002;
       }
@@ -242,6 +273,9 @@ export class AudioSpectrum {
     console.log('Using fallback animation for audio spectrum');
   }
 
+  public getSpectrumLights(): PointLight[] {
+    return this.spectrumLights;
+  }
   public dispose(): void {
     // Stop animation
     if (this.animationFrame) {
@@ -269,8 +303,13 @@ export class AudioSpectrum {
       material.dispose();
     });
     
+    this.spectrumLights.forEach(light => {
+      light.dispose();
+    });
+    
     this.spectrumBars = [];
     this.materials = [];
+    this.spectrumLights = [];
     
     console.log('Audio spectrum disposed');
   }

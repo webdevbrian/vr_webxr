@@ -16,7 +16,12 @@ import {
     WebXRState,
     GroundMesh,
     Mesh,
-    CannonJSPlugin
+    CannonJSPlugin,
+    PointLight,
+    SpotLight,
+    ReflectionProbe,
+    MirrorTexture,
+    Plane
   } from '@babylonjs/core';
   import * as CANNON from 'cannon-es';
   import { VRSceneConfig, VRSessionData } from '../types/VRTypes';
@@ -37,6 +42,8 @@ import {
     private vrSessionData: VRSessionData;
     private canvas: HTMLCanvasElement;
     private audioSpectrum: AudioSpectrum | null = null;
+    private spectrumLights: PointLight[] = [];
+    private reflectionProbe: ReflectionProbe | null = null;
   
     constructor(canvas: HTMLCanvasElement, config: VRSceneConfig) {
       this.canvas = canvas;
@@ -75,96 +82,174 @@ import {
         this.scene.enablePhysics(new Vector3(0, -9.81, 0), new CannonJSPlugin(true, 10, CANNON));
       }
   
-      // Create skybox
-      if (config.skyboxTexture) {
-        this.createSkybox(config.skyboxTexture);
-      }
+      // Create dark cyberpunk skybox
+      this.createCyberpunkSkybox();
     }
   
-    private createEnvironment(): void {
-      // Create ground
-      const ground = MeshBuilder.CreateGround("ground", { width: 20, height: 20 }, this.scene);
+    private createCyberpunkSkybox(): void {
+      const skybox = MeshBuilder.CreateSphere("skyBox", { diameter: 100 }, this.scene);
+      const skyboxMaterial = new PBRMaterial("skyboxMaterial", this.scene);
+      
+      skyboxMaterial.backFaceCulling = false;
+      skyboxMaterial.baseColor = new Color3(0.05, 0.05, 0.1); // Very dark blue
+      skyboxMaterial.roughness = 1.0;
+      skyboxMaterial.metallicFactor = 0.0;
+      skyboxMaterial.emissiveColor = new Color3(0.02, 0.02, 0.05); // Subtle dark glow
+      skybox.material = skyboxMaterial;
+      skybox.infiniteDistance = true;
+    }
+
+    private createCyberpunkEnvironment(): void {
+      // Create wet street ground with reflections
+      this.createWetStreetGround();
+  
+      // Create cyberpunk objects
+      this.createCyberpunkObjects();
+      this.createCyberpunkStructures();
+    }
+  
+    private createWetStreetGround(): void {
+      const ground = MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, this.scene);
       const groundMaterial = new PBRMaterial("groundMaterial", this.scene);
-      groundMaterial.baseColor = new Color3(0.2, 0.3, 0.2);
-      groundMaterial.roughness = 0.8;
-      groundMaterial.metallicFactor = 0.1;
+      
+      // Wet asphalt appearance
+      groundMaterial.baseColor = new Color3(0.1, 0.1, 0.15);
+      groundMaterial.roughness = 0.1; // Very smooth for reflections
+      groundMaterial.metallicFactor = 0.8; // High metallic for wet look
+      groundMaterial.emissiveColor = new Color3(0.02, 0.02, 0.05);
+      
       ground.material = groundMaterial;
       ground.receiveShadows = true;
-  
-      // Create some interesting objects
-      this.createDemoObjects();
-      this.createInteractiveElements();
     }
-  
-    private createDemoObjects(): void {
-      // Create a series of cubes with different materials
+
+    private createCyberpunkObjects(): void {
+      // Create neon-lit geometric structures
+      const colors = [
+        new Color3(0, 1, 1),     // Cyan
+        new Color3(1, 0, 1),     // Magenta
+        new Color3(0, 0.5, 1),   // Electric blue
+        new Color3(1, 0.2, 0.8), // Hot pink
+        new Color3(0.5, 0, 1)    // Purple
+      ];
+
       for (let i = 0; i < 5; i++) {
-        const box = MeshBuilder.CreateBox(`box${i}`, { size: 1 }, this.scene);
-        box.position.x = (i - 2) * 3;
-        box.position.y = 0.5;
-        box.position.z = 0;
+        // Create hexagonal prisms instead of cubes
+        const hex = MeshBuilder.CreateCylinder(`hex${i}`, { 
+          height: 2 + Math.random() * 2, 
+          diameter: 1.5,
+          tessellation: 6 
+        }, this.scene);
+        
+        hex.position.x = (i - 2) * 4;
+        hex.position.y = (2 + Math.random() * 2) / 2;
+        hex.position.z = -2;
   
-        const material = new PBRMaterial(`boxMaterial${i}`, this.scene);
-        material.baseColor = new Color3(
-          Math.random(),
-          Math.random(),
-          Math.random()
-        );
-        material.roughness = Math.random();
-        material.metallicFactor = Math.random();
-        box.material = material;
+        const material = new PBRMaterial(`hexMaterial${i}`, this.scene);
+        const color = colors[i];
+        material.baseColor = new Color3(color.r * 0.3, color.g * 0.3, color.b * 0.3);
+        material.roughness = 0.2;
+        material.metallicFactor = 0.9;
+        material.emissiveColor = new Color3(color.r * 0.5, color.g * 0.5, color.b * 0.5);
+        hex.material = material;
       }
   
-      // Create a sphere
-      const sphere = MeshBuilder.CreateSphere("sphere", { diameter: 2 }, this.scene);
-      sphere.position.set(0, 1, 5);
+      // Create a central holographic sphere
+      const sphere = MeshBuilder.CreateSphere("sphere", { diameter: 3 }, this.scene);
+      sphere.position.set(0, 1.5, 3);
       
       const sphereMaterial = new PBRMaterial("sphereMaterial", this.scene);
-      sphereMaterial.baseColor = new Color3(1, 0.5, 0);
-      sphereMaterial.roughness = 0.2;
-      sphereMaterial.metallicFactor = 0.8;
+      sphereMaterial.baseColor = new Color3(0.1, 0.1, 0.3);
+      sphereMaterial.roughness = 0.1;
+      sphereMaterial.metallicFactor = 0.9;
+      sphereMaterial.emissiveColor = new Color3(0, 0.8, 1); // Bright cyan glow
       sphere.material = sphereMaterial;
   
-      // Create a torus
-      const torus = MeshBuilder.CreateTorus("torus", { 
-        diameter: 3, 
-        thickness: 0.5 
+      // Create floating neon rings
+      const ring = MeshBuilder.CreateTorus("ring", { 
+        diameter: 4, 
+        thickness: 0.3 
       }, this.scene);
-      torus.position.set(-5, 2, 0);
-      torus.rotation.x = Math.PI / 4;
+      ring.position.set(-6, 3, 0);
+      ring.rotation.x = Math.PI / 3;
       
-      const torusMaterial = new PBRMaterial("torusMaterial", this.scene);
-      torusMaterial.baseColor = new Color3(0.5, 0, 1);
-      torusMaterial.roughness = 0.1;
-      torusMaterial.metallicFactor = 0.9;
-      torus.material = torusMaterial;
+      const ringMaterial = new PBRMaterial("ringMaterial", this.scene);
+      ringMaterial.baseColor = new Color3(0.2, 0.1, 0.3);
+      ringMaterial.roughness = 0.1;
+      ringMaterial.metallicFactor = 0.9;
+      ringMaterial.emissiveColor = new Color3(1, 0, 1); // Bright magenta glow
+      ring.material = ringMaterial;
     }
   
-    private createInteractiveElements(): void {
-      // Create floating platforms
-      for (let i = 0; i < 3; i++) {
+    private createCyberpunkStructures(): void {
+      // Create neon-lit platforms in a circular arrangement
+      for (let i = 0; i < 4; i++) {
         const platform = MeshBuilder.CreateCylinder(`platform${i}`, {
-          height: 0.2,
-          diameter: 2
+          height: 0.3,
+          diameter: 2.5,
+          tessellation: 8
         }, this.scene);
         
         platform.position.set(
-          Math.cos(i * Math.PI * 2 / 3) * 8,
-          1 + i * 0.5,
-          Math.sin(i * Math.PI * 2 / 3) * 8
+          Math.cos(i * Math.PI * 2 / 4) * 10,
+          0.15,
+          Math.sin(i * Math.PI * 2 / 4) * 10
         );
   
         const platformMaterial = new PBRMaterial(`platformMaterial${i}`, this.scene);
-        platformMaterial.baseColor = new Color3(0.8, 0.8, 0.2);
-        platformMaterial.roughness = 0.3;
-        platformMaterial.metallicFactor = 0.1;
+        platformMaterial.baseColor = new Color3(0.1, 0.1, 0.1);
+        platformMaterial.roughness = 0.2;
+        platformMaterial.metallicFactor = 0.8;
+        platformMaterial.emissiveColor = new Color3(0, 0.5, 1); // Blue glow
         platform.material = platformMaterial;
       }
   
-      // Create a central pillar
-      const pillar = MeshBuilder.CreateCylinder("pillar", {
-        height: 6,
-        diameter: 0.8
+      // Create towering neon pillars
+      for (let i = 0; i < 3; i++) {
+        const pillar = MeshBuilder.CreateCylinder(`pillar${i}`, {
+          height: 8 + i * 2,
+          diameter: 0.6,
+          tessellation: 8
+        }, this.scene);
+        
+        pillar.position.set(
+          (i - 1) * 6,
+          (8 + i * 2) / 2,
+          -8
+        );
+        
+        const pillarMaterial = new PBRMaterial(`pillarMaterial${i}`, this.scene);
+        pillarMaterial.baseColor = new Color3(0.05, 0.05, 0.05);
+        pillarMaterial.roughness = 0.3;
+        pillarMaterial.metallicFactor = 0.7;
+        
+        const colors = [
+          new Color3(1, 0, 0.5), // Hot pink
+          new Color3(0, 1, 0.5), // Cyan
+          new Color3(0.5, 0, 1)  // Purple
+        ];
+        pillarMaterial.emissiveColor = colors[i].scale(0.3);
+        pillar.material = pillarMaterial;
+      }
+    }
+
+    private setupReflections(): void {
+      // Create reflection probe for real-time reflections
+      this.reflectionProbe = new ReflectionProbe("reflectionProbe", 512, this.scene);
+      this.reflectionProbe.setRenderingAutoClearDepthStencil(1, true, true, true);
+      
+      // Apply reflections to all PBR materials
+      this.scene.materials.forEach(material => {
+        if (material instanceof PBRMaterial) {
+          material.reflectionTexture = this.reflectionProbe.cubeTexture;
+          material.reflectionFresnelParameters = {
+            bias: 0.1,
+            power: 0.5,
+            leftColor: Color3.White(),
+            rightColor: Color3.Black()
+          };
+        }
+      });
+    }
       }, this.scene);
       pillar.position.y = 3;
       
@@ -178,52 +263,74 @@ import {
     private setupAudioSpectrum(): void {
       // Create audio spectrum visualization
       this.audioSpectrum = new AudioSpectrum(this.scene, {
-        bandCount: 8,
-        radius: 12, // Position outside main scene objects
-        maxHeight: 4, // Maximum bar height
-        smoothingFactor: 0.85 // Smooth animation
+        bandCount: 12,
+        radius: 15, // Position outside main scene objects
+        maxHeight: 6, // Maximum bar height
+        smoothingFactor: 0.8 // Smooth animation
       });
+      
+      // Get spectrum lights for audio-reactive lighting
+      if (this.audioSpectrum) {
+        this.spectrumLights = this.audioSpectrum.getSpectrumLights();
+      }
     }
   
-    private setupLighting(): void {
-      // Ambient light
+    private setupCyberpunkLighting(): void {
+      // Very dim ambient light for dark atmosphere
       const hemisphericLight = new HemisphericLight(
         "hemisphericLight",
         new Vector3(0, 1, 0),
         this.scene
       );
-      hemisphericLight.intensity = 0.4;
+      hemisphericLight.intensity = 0.1; // Much darker
   
-      // Directional light for shadows
+      // Subtle directional light
       const directionalLight = new DirectionalLight(
         "directionalLight",
-        new Vector3(-1, -1, -1),
+        new Vector3(-0.5, -1, -0.5),
         this.scene
       );
-      directionalLight.intensity = 0.8;
-      directionalLight.position = new Vector3(10, 10, 10);
+      directionalLight.intensity = 0.3; // Much dimmer
+      directionalLight.position = new Vector3(5, 10, 5);
   
       // Shadow generator
       const shadowGenerator = new ShadowGenerator(1024, directionalLight);
       shadowGenerator.useExponentialShadowMap = true;
       
-      // Add shadow casters
+      // Add key objects as shadow casters
       this.scene.meshes.forEach(mesh => {
-        if (mesh.name.includes('box') || mesh.name.includes('sphere') || mesh.name.includes('torus')) {
+        if (mesh.name.includes('hex') || mesh.name.includes('sphere') || mesh.name.includes('ring') || mesh.name.includes('pillar')) {
           shadowGenerator.addShadowCaster(mesh);
         }
       });
+      
+      // Add atmospheric spot lights
+      this.createAtmosphericLights();
     }
   
-    private createSkybox(textureUrl: string): void {
-      const skybox = MeshBuilder.CreateSphere("skyBox", { diameter: 100 }, this.scene);
-      const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
+    private createAtmosphericLights(): void {
+      // Create colored spot lights for atmosphere
+      const spotLight1 = new SpotLight(
+        "spotLight1",
+        new Vector3(-10, 8, -5),
+        new Vector3(1, -1, 1),
+        Math.PI / 3,
+        2,
+        this.scene
+      );
+      spotLight1.diffuse = new Color3(0, 0.5, 1); // Blue
+      spotLight1.intensity = 0.5;
       
-      skyboxMaterial.backFaceCulling = false;
-      skyboxMaterial.diffuseColor = new Color3(0.2, 0.6, 1);
-      skyboxMaterial.specularColor = new Color3(0, 0, 0);
-      skybox.material = skyboxMaterial;
-      skybox.infiniteDistance = true;
+      const spotLight2 = new SpotLight(
+        "spotLight2",
+        new Vector3(10, 8, 5),
+        new Vector3(-1, -1, -1),
+        Math.PI / 3,
+        2,
+        this.scene
+      );
+      spotLight2.diffuse = new Color3(1, 0, 0.5); // Pink
+      spotLight2.intensity = 0.5;
     }
   
     private async setupVR(): Promise<void> {
