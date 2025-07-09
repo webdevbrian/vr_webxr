@@ -122,10 +122,10 @@ import {
       asphaltTexture.vScale = 4;
       
       groundMaterial.baseTexture = asphaltTexture;
-      groundMaterial.baseColor = new Color3(0.8, 0.8, 0.8); // White tint to show texture
+      groundMaterial.baseColor = new Color3(1, 1, 1); // Pure white to show texture clearly
       groundMaterial.roughness = 0.2; // Smooth for wet look but not mirror-like
       groundMaterial.metallicFactor = 0.7; // High metallic for wet reflection
-      groundMaterial.emissiveColor = new Color3(0.01, 0.01, 0.02);
+      groundMaterial.emissiveColor = new Color3(0, 0, 0); // No emissive to show texture
       
       ground.material = groundMaterial;
       ground.receiveShadows = true;
@@ -163,10 +163,10 @@ import {
         const color = colors[i];
         
         material.baseTexture = metalTexture;
-        material.baseColor = new Color3(color.r * 0.8, color.g * 0.8, color.b * 0.8); // Brighter tint to show texture
+        material.baseColor = new Color3(1, 1, 1); // Pure white base to show texture
         material.roughness = 0.3; // Slightly rougher for realistic metal
         material.metallicFactor = 0.9;
-        material.emissiveColor = new Color3(color.r * 0.3, color.g * 0.3, color.b * 0.3); // Reduced for texture visibility
+        material.emissiveColor = new Color3(color.r * 0.2, color.g * 0.2, color.b * 0.2); // Minimal emissive
         hex.material = material;
       }
   
@@ -180,10 +180,10 @@ import {
       const glassTexture = new Texture("https://images.pexels.com/photos/1108101/pexels-photo-1108101.jpeg?auto=compress&cs=tinysrgb&w=512", this.scene);
       
       sphereMaterial.baseTexture = glassTexture;
-      sphereMaterial.baseColor = new Color3(0.6, 0.6, 0.8); // Much brighter to show texture
+      sphereMaterial.baseColor = new Color3(1, 1, 1); // Pure white to show texture
       sphereMaterial.roughness = 0.05; // Very smooth for glass-like appearance
       sphereMaterial.metallicFactor = 0.9;
-      sphereMaterial.emissiveColor = new Color3(0, 0.6, 0.8); // Reduced for texture visibility
+      sphereMaterial.emissiveColor = new Color3(0, 0.4, 0.6); // Minimal cyan glow
       sphereMaterial.alpha = 0.8; // Semi-transparent for holographic effect
       sphere.material = sphereMaterial;
   
@@ -203,10 +203,9 @@ import {
       neonTexture.vScale = 1;
       
       ringMaterial.baseTexture = neonTexture;
-      ringMaterial.baseColor = new Color3(0.8, 0.6, 0.9); // Much brighter to show texture
+      ringMaterial.baseColor = new Color3(1, 1, 1); // Pure white to show texture
       ringMaterial.roughness = 0.2; // Slightly rougher for realistic neon material
       ringMaterial.metallicFactor = 0.9;
-      ringMaterial.emissiveColor = new Color3(0.8, 0, 0.8); // Reduced for texture visibility
       ring.material = ringMaterial;
     }
   
@@ -233,10 +232,9 @@ import {
         concreteTexture.vScale = 2;
         
         platformMaterial.baseTexture = concreteTexture;
-        platformMaterial.baseColor = new Color3(0.7, 0.7, 0.7); // Much brighter to show texture
+        platformMaterial.baseColor = new Color3(1, 1, 1); // Pure white to show texture
         platformMaterial.roughness = 0.4; // Rougher for concrete appearance
         platformMaterial.metallicFactor = 0.8;
-        platformMaterial.emissiveColor = new Color3(0, 0.3, 0.6); // Reduced for texture visibility
         platform.material = platformMaterial;
       }
   
@@ -262,7 +260,7 @@ import {
         brushedMetalTexture.vScale = 4; // Stretch vertically for pillar effect
         
         pillarMaterial.baseTexture = brushedMetalTexture;
-        pillarMaterial.baseColor = new Color3(0.6, 0.6, 0.6); // Much brighter to show texture
+        pillarMaterial.baseColor = new Color3(1, 1, 1); // Pure white to show texture
         pillarMaterial.roughness = 0.4; // Rougher for brushed metal appearance
         pillarMaterial.metallicFactor = 0.7;
         
