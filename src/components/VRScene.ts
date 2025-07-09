@@ -400,7 +400,7 @@ import {
       try {
         // Load tank model - positioned on left side and behind current objects
         const tankConfig: ModelConfig = {
-          path: "/src/models/",
+          path: "/models/",
           fileName: "tank.glb",
           position: new Vector3(-15, 0, -15), // Left side and behind
           scale: new Vector3(1.8, 1.8, 1.8), // Realistic tank size for VR
@@ -408,7 +408,7 @@ import {
           enablePhysics: true,
           physicsType: PhysicsImpostor.BoxImpostor,
           physicsMass: 0, // Static/immovable
-          textureBasePath: "/src/models/textures/texture_tank"
+          textureBasePath: "/models/textures/texture_tank"
         };
 
         await this.modelLoader.loadModel(tankConfig);
