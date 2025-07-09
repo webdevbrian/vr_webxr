@@ -250,15 +250,6 @@ import {
         }
       });
     }
-      }, this.scene);
-      pillar.position.y = 3;
-      
-      const pillarMaterial = new PBRMaterial("pillarMaterial", this.scene);
-      pillarMaterial.baseColor = new Color3(0.6, 0.6, 0.6);
-      pillarMaterial.roughness = 0.4;
-      pillarMaterial.metallicFactor = 0.6;
-      pillar.material = pillarMaterial;
-    }
 
     private setupAudioSpectrum(): void {
       // Create audio spectrum visualization
