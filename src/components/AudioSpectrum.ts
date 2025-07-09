@@ -7,9 +7,7 @@ import {
   Mesh,
   Animation,
   AnimationKeys,
-  PointLight,
-  ParticleSystem,
-  Texture
+  PointLight
 } from '@babylonjs/core';
 
 export interface AudioSpectrumConfig {
@@ -31,7 +29,6 @@ export class AudioSpectrum {
   private config: AudioSpectrumConfig;
   private smoothedData: number[] = [];
   private animationFrame: number | null = null;
-  private particleSystems: ParticleSystem[] = [];
 
   constructor(scene: Scene, config: AudioSpectrumConfig) {
     this.scene = scene;
@@ -39,7 +36,6 @@ export class AudioSpectrum {
     this.smoothedData = new Array(config.bandCount).fill(0);
     
     this.createSpectrumBars();
-    this.createParticleSystems();
     this.initializeAudio();
   }
 
@@ -83,60 +79,6 @@ export class AudioSpectrum {
       this.spectrumBars.push(bar);
       this.materials.push(material);
       this.spectrumLights.push(light);
-    }
-  }
-
-  private createParticleSystems(): void {
-    for (let i = 0; i < this.config.bandCount; i++) {
-      const bar = this.spectrumBars[i];
-      const baseColor = this.getCyberpunkColor(i / (this.config.bandCount - 1));
-      
-      // Create particle system for each spectrum bar
-      const particleSystem = new ParticleSystem(`spectrumParticles_${i}`, 200, this.scene);
-      
-      // Set the particle emitter to the top of the spectrum bar
-      particleSystem.emitter = bar;
-      particleSystem.minEmitBox = new Vector3(-0.2, 0.5, -0.2); // Small area at top of bar
-      particleSystem.maxEmitBox = new Vector3(0.2, 0.8, 0.2);
-      
-      // Create a simple white texture for particles (will be tinted by color)
-      particleSystem.particleTexture = new Texture("https://playground.babylonjs.com/textures/flare.png", this.scene);
-      
-      // Particle appearance
-      particleSystem.color1 = new Color3(baseColor.r, baseColor.g, baseColor.b);
-      particleSystem.color2 = new Color3(baseColor.r * 0.8, baseColor.g * 0.8, baseColor.b * 0.8);
-      particleSystem.colorDead = new Color3(baseColor.r * 0.2, baseColor.g * 0.2, baseColor.b * 0.2);
-      
-      // Particle size
-      particleSystem.minSize = 0.1;
-      particleSystem.maxSize = 0.4;
-      
-      // Particle lifetime
-      particleSystem.minLifeTime = 0.8;
-      particleSystem.maxLifeTime = 2.0;
-      
-      // Emission rate (will be controlled by audio)
-      particleSystem.emitRate = 10; // Base emission rate
-      
-      // Particle speed and direction
-      particleSystem.minEmitPower = 2;
-      particleSystem.maxEmitPower = 6;
-      particleSystem.updateSpeed = 0.02;
-      
-      // Gravity effect
-      particleSystem.gravity = new Vector3(0, -2, 0);
-      
-      // Direction - particles shoot upward and outward
-      particleSystem.direction1 = new Vector3(-0.5, 1, -0.5);
-      particleSystem.direction2 = new Vector3(0.5, 2, 0.5);
-      
-      // Blending mode for glow effect
-      particleSystem.blendMode = ParticleSystem.BLENDMODE_ADD;
-      
-      // Start the particle system
-      particleSystem.start();
-      
-      this.particleSystems.push(particleSystem);
     }
   }
 
@@ -280,39 +222,6 @@ export class AudioSpectrum {
       light.intensity = 2.0 + (intensity * 8.0); // Extremely bright for maximum bloom
       light.range = 12 + (intensity * 8); // Dynamic range based on intensity
       
-      // Update particle system based on audio intensity
-      const particleSystem = this.particleSystems[i];
-      if (particleSystem) {
-        // Dramatically increase particle emission based on audio intensity
-        particleSystem.emitRate = 10 + (intensity * 150); // Much more particles when audio is active
-        
-        // Increase particle power/speed based on intensity
-        particleSystem.minEmitPower = 2 + (intensity * 8);
-        particleSystem.maxEmitPower = 6 + (intensity * 15);
-        
-        // Make particles larger and brighter with more audio activity
-        particleSystem.minSize = 0.1 + (intensity * 0.3);
-        particleSystem.maxSize = 0.4 + (intensity * 0.8);
-        
-        // Update particle colors to be brighter with more intensity
-        const baseColor = this.getCyberpunkColor(i / (this.config.bandCount - 1));
-        const colorIntensity = 1.0 + (intensity * 2.0);
-        particleSystem.color1 = new Color3(
-          Math.min(baseColor.r * colorIntensity, 1.0),
-          Math.min(baseColor.g * colorIntensity, 1.0),
-          Math.min(baseColor.b * colorIntensity, 1.0)
-        );
-        particleSystem.color2 = new Color3(
-          Math.min(baseColor.r * colorIntensity * 0.8, 1.0),
-          Math.min(baseColor.g * colorIntensity * 0.8, 1.0),
-          Math.min(baseColor.b * colorIntensity * 0.8, 1.0)
-        );
-        
-        // Update emitter position to follow the bar height
-        particleSystem.minEmitBox = new Vector3(-0.2, targetHeight - 0.3, -0.2);
-        particleSystem.maxEmitBox = new Vector3(0.2, targetHeight + 0.2, 0.2);
-      }
-      
       // Subtle rotation for visual interest
       bar.rotation.y += 0.005 * (1 + intensity);
     }
@@ -355,20 +264,6 @@ export class AudioSpectrum {
         // Update light intensity
         light.intensity = 2.5 + (intensity * 4.0); // Much brighter fallback lighting
         light.range = 12 + (intensity * 6); // Dynamic range for fallback too
-        
-        // Update particle system for fallback animation
-        const particleSystem = this.particleSystems[i];
-        if (particleSystem) {
-          particleSystem.emitRate = 15 + (intensity * 80); // Moderate particle emission for fallback
-          particleSystem.minEmitPower = 2 + (intensity * 4);
-          particleSystem.maxEmitPower = 6 + (intensity * 8);
-          particleSystem.minSize = 0.1 + (intensity * 0.2);
-          particleSystem.maxSize = 0.4 + (intensity * 0.5);
-          
-          // Update emitter position for fallback
-          particleSystem.minEmitBox = new Vector3(-0.2, targetHeight - 0.3, -0.2);
-          particleSystem.maxEmitBox = new Vector3(0.2, targetHeight + 0.2, 0.2);
-        }
         
         bar.rotation.y += 0.002;
       }
@@ -414,14 +309,9 @@ export class AudioSpectrum {
       light.dispose();
     });
     
-    this.particleSystems.forEach(particleSystem => {
-      particleSystem.dispose();
-    });
-    
     this.spectrumBars = [];
     this.materials = [];
     this.spectrumLights = [];
-    this.particleSystems = [];
     
     console.log('Audio spectrum disposed');
   }
