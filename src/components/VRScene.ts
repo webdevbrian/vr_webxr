@@ -532,8 +532,34 @@ import {
     private createVolumetricLighting(): void {
       // Create volumetric fog for atmospheric effect
       this.scene.fogMode = Scene.FOGMODE_EXP2;
-      this.scene.fogDensity = 0.02; // Subtle fog
-      this.scene.fogColor = new Color3(0.1, 0.15, 0.3); // Dark blue fog
+      this.scene.fogDensity = 0.08; // Much denser fog for moody atmosphere
+      this.scene.fogColor = new Color3(0.05, 0.08, 0.15); // Very dark blue-purple fog
+      
+      // Add additional fog layers for depth
+      this.createFogLayers();
+    }
+    
+    private createFogLayers(): void {
+      // Create multiple fog planes at different heights for layered atmospheric effect
+      for (let i = 0; i < 3; i++) {
+        const fogPlane = MeshBuilder.CreateGround(`fogLayer${i}`, { 
+          width: 60, 
+          height: 60 
+        }, this.scene);
+        
+        fogPlane.position.y = 2 + (i * 3); // Stack fog layers
+        fogPlane.rotation.x = Math.PI / 2; // Make horizontal
+        
+        const fogMaterial = new PBRMaterial(`fogMaterial${i}`, this.scene);
+        fogMaterial.baseColor = new Color3(0.02, 0.05, 0.12); // Very dark blue
+        fogMaterial.alpha = 0.15 - (i * 0.03); // Decreasing opacity with height
+        fogMaterial.roughness = 1.0;
+        fogMaterial.metallicFactor = 0.0;
+        fogMaterial.emissiveColor = new Color3(0.01, 0.02, 0.08); // Subtle dark glow
+        
+        fogPlane.material = fogMaterial;
+        fogPlane.visibility = 0.3; // Semi-transparent
+      }
     }
     
     private setupPostProcessing(): void {
@@ -571,11 +597,22 @@ import {
       // Enable image processing for enhanced visuals
       this.renderPipeline.imageProcessingEnabled = true;
       if (this.renderPipeline.imageProcessing) {
-        this.renderPipeline.imageProcessing.contrast = 1.4; // Even higher contrast for bloom
-        this.renderPipeline.imageProcessing.exposure = 1.3; // Brighter exposure for bloom
+        this.renderPipeline.imageProcessing.contrast = 1.8; // Much higher contrast for dramatic mood
+        this.renderPipeline.imageProcessing.exposure = 0.9; // Darker exposure for moody atmosphere
         this.renderPipeline.imageProcessing.vignetteEnabled = true;
-        this.renderPipeline.imageProcessing.vignetteWeight = 0.3; // Subtle vignette
-        this.renderPipeline.imageProcessing.vignetteColor = new Color3(0, 0, 0.1); // Dark blue vignette
+        this.renderPipeline.imageProcessing.vignetteWeight = 0.6; // Stronger vignette for mood
+        this.renderPipeline.imageProcessing.vignetteColor = new Color3(0, 0, 0.05); // Very dark vignette
+        
+        // Add color grading for moody atmosphere
+        this.renderPipeline.imageProcessing.colorGradingEnabled = true;
+        this.renderPipeline.imageProcessing.colorCurvesEnabled = true;
+        
+        if (this.renderPipeline.imageProcessing.colorCurves) {
+          // Darken shadows and reduce highlights for moody look
+          this.renderPipeline.imageProcessing.colorCurves.globalSaturation = 80; // Slightly desaturated
+          this.renderPipeline.imageProcessing.colorCurves.globalDensity = 60; // Darker overall
+          this.renderPipeline.imageProcessing.colorCurves.shadowsHighlights = 40; // Crush shadows
+        }
       }
       
       // Enable depth of field for cinematic effect (subtle)
