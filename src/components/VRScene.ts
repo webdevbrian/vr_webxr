@@ -22,7 +22,11 @@ import {
     ReflectionProbe,
     MirrorTexture,
     Plane,
-    Constants
+    Constants,
+    PostProcess,
+    Effect,
+    SSAORenderingPipeline,
+    DefaultRenderingPipeline
   } from '@babylonjs/core';
   import * as CANNON from 'cannon-es';
   import { VRSceneConfig, VRSessionData } from '../types/VRTypes';
@@ -45,6 +49,7 @@ import {
     private audioSpectrum: AudioSpectrum | null = null;
     private spectrumLights: PointLight[] = [];
     private reflectionProbe: ReflectionProbe | null = null;
+    private renderPipeline: DefaultRenderingPipeline | null = null;
   
     constructor(canvas: HTMLCanvasElement, config: VRSceneConfig) {
       this.canvas = canvas;
@@ -62,6 +67,7 @@ import {
       this.setupScene(config);
       this.createCyberpunkEnvironment();
       this.setupCyberpunkLighting();
+      this.setupPostProcessing();
       this.setupAudioSpectrum();
       this.setupVR();
     }
@@ -316,62 +322,190 @@ import {
       }
     }
   
-    private setupCyberpunkLighting(): void {
-      // Very dim ambient light for dark atmosphere
+    private setupDramaticLighting(): void {
+      // Extremely dim ambient light for dramatic contrast
       const hemisphericLight = new HemisphericLight(
         "hemisphericLight",
         new Vector3(0, 1, 0),
         this.scene
       );
-      hemisphericLight.intensity = 0.1; // Much darker
+      hemisphericLight.intensity = 0.02; // Extremely dark for dramatic effect
+      hemisphericLight.diffuse = new Color3(0.2, 0.3, 0.6); // Cool blue ambient
   
-      // Subtle directional light
+      // Strong directional light for dramatic shadows
       const directionalLight = new DirectionalLight(
         "directionalLight",
-        new Vector3(-0.5, -1, -0.5),
+        new Vector3(-0.3, -1, -0.7), // More angled for dramatic shadows
         this.scene
       );
-      directionalLight.intensity = 0.3; // Much dimmer
-      directionalLight.position = new Vector3(5, 10, 5);
+      directionalLight.intensity = 1.2; // Much stronger for contrast
+      directionalLight.position = new Vector3(8, 15, 8);
+      directionalLight.diffuse = new Color3(1.0, 0.9, 0.7); // Warm directional light
   
-      // Shadow generator
-      const shadowGenerator = new ShadowGenerator(1024, directionalLight);
-      shadowGenerator.useExponentialShadowMap = true;
+      // High-quality shadow generator for dramatic shadows
+      const shadowGenerator = new ShadowGenerator(2048, directionalLight); // Higher resolution
+      shadowGenerator.usePercentageCloserFiltering = true; // Softer shadow edges
+      shadowGenerator.filteringQuality = ShadowGenerator.QUALITY_HIGH;
+      shadowGenerator.darkness = 0.8; // Darker shadows
+      shadowGenerator.bias = 0.00001; // Reduce shadow acne
       
       // Add key objects as shadow casters
       this.scene.meshes.forEach(mesh => {
-        if (mesh.name.includes('hex') || mesh.name.includes('sphere') || mesh.name.includes('ring') || mesh.name.includes('pillar')) {
+        if (mesh.name.includes('hex') || mesh.name.includes('sphere') || 
+            mesh.name.includes('ring') || mesh.name.includes('pillar') ||
+            mesh.name.includes('wall') || mesh.name.includes('crate')) {
           shadowGenerator.addShadowCaster(mesh);
         }
       });
       
-      // Add atmospheric spot lights
-      this.createAtmosphericLights();
+      // Add dramatic atmospheric lighting
+      this.createDramaticAtmosphericLights();
+      this.createVolumetricLighting();
     }
   
-    private createAtmosphericLights(): void {
-      // Create colored spot lights for atmosphere
-      const spotLight1 = new SpotLight(
-        "spotLight1",
-        new Vector3(-10, 8, -5),
+    private createDramaticAtmosphericLights(): void {
+      // Dramatic key light (main light source)
+      const keyLight = new SpotLight(
+        "keyLight",
+        new Vector3(-12, 12, -8),
         new Vector3(1, -1, 1),
-        Math.PI / 3,
-        2,
+        Math.PI / 4, // Narrower cone for more focused light
+        4, // Sharper falloff
         this.scene
       );
-      spotLight1.diffuse = new Color3(0, 0.5, 1); // Blue
-      spotLight1.intensity = 0.5;
+      keyLight.diffuse = new Color3(1.0, 0.8, 0.6); // Warm key light
+      keyLight.intensity = 3.0; // Very bright for drama
+      keyLight.range = 25;
       
-      const spotLight2 = new SpotLight(
-        "spotLight2",
-        new Vector3(10, 8, 5),
-        new Vector3(-1, -1, -1),
-        Math.PI / 3,
-        2,
+      // Rim light for silhouette enhancement
+      const rimLight = new SpotLight(
+        "rimLight",
+        new Vector3(15, 8, 10),
+        new Vector3(-1, -0.5, -1),
+        Math.PI / 6, // Very narrow cone
+        6, // Sharp falloff
         this.scene
       );
-      spotLight2.diffuse = new Color3(1, 0, 0.5); // Pink
-      spotLight2.intensity = 0.5;
+      rimLight.diffuse = new Color3(0.3, 0.7, 1.0); // Cool rim light
+      rimLight.intensity = 2.5;
+      rimLight.range = 20;
+      
+      // Fill light (subtle, opposite side)
+      const fillLight = new SpotLight(
+        "fillLight",
+        new Vector3(8, 6, -12),
+        new Vector3(-0.5, -1, 1),
+        Math.PI / 3,
+        3,
+        this.scene
+      );
+      fillLight.diffuse = new Color3(0.4, 0.5, 0.8); // Cool fill light
+      fillLight.intensity = 0.8; // Much dimmer than key light
+      fillLight.range = 18;
+      
+      // Accent lights for specific objects
+      this.createAccentLights();
+    }
+    
+    private createAccentLights(): void {
+      // Accent light for the central sphere
+      const spotLight1 = new SpotLight(
+        "sphereAccent",
+        new Vector3(0, 8, 8),
+        new Vector3(0, -1, -0.5),
+        Math.PI / 8, // Very focused
+        8, // Sharp falloff
+        this.scene
+      );
+      spotLight1.diffuse = new Color3(0, 1, 1); // Cyan to match sphere
+      spotLight1.intensity = 4.0;
+      spotLight1.range = 15;
+      
+      // Accent light for the ring
+      const spotLight2 = new SpotLight(
+        "ringAccent",
+        new Vector3(-6, 8, 5),
+        new Vector3(0, -1, -1),
+        Math.PI / 6,
+        6,
+        this.scene
+      );
+      spotLight2.diffuse = new Color3(1, 0, 1); // Magenta to match ring
+      spotLight2.intensity = 3.5;
+      spotLight2.range = 12;
+      
+      // Ground uplighting for dramatic effect
+      for (let i = 0; i < 4; i++) {
+        const upLight = new PointLight(
+          `upLight${i}`,
+          new Vector3(
+            Math.cos(i * Math.PI / 2) * 8,
+            0.5, // Close to ground
+            Math.sin(i * Math.PI / 2) * 8
+          ),
+          this.scene
+        );
+        upLight.diffuse = new Color3(0.2, 0.4, 1.0); // Cool blue uplight
+        upLight.intensity = 1.5;
+        upLight.range = 12;
+      }
+    }
+    
+    private createVolumetricLighting(): void {
+      // Create volumetric fog for atmospheric effect
+      this.scene.fogMode = Scene.FOGMODE_EXP2;
+      this.scene.fogDensity = 0.02; // Subtle fog
+      this.scene.fogColor = new Color3(0.1, 0.15, 0.3); // Dark blue fog
+    }
+    
+    private setupPostProcessing(): void {
+      // Create default rendering pipeline with advanced effects
+      this.renderPipeline = new DefaultRenderingPipeline(
+        "defaultPipeline",
+        true, // HDR enabled
+        this.scene,
+        [this.camera]
+      );
+      
+      // Enable and configure SSAO (Screen Space Ambient Occlusion)
+      this.renderPipeline.samples = 4; // Anti-aliasing
+      
+      // SSAO Configuration for dramatic ambient occlusion
+      if (this.renderPipeline.ssaoRenderingPipeline) {
+        this.renderPipeline.ssaoRenderingPipeline.fallOff = 0.000001;
+        this.renderPipeline.ssaoRenderingPipeline.area = 1.0;
+        this.renderPipeline.ssaoRenderingPipeline.radius = 0.5; // Tighter occlusion
+        this.renderPipeline.ssaoRenderingPipeline.totalStrength = 2.0; // Stronger effect
+        this.renderPipeline.ssaoRenderingPipeline.base = 0.1; // Darker base
+      }
+      
+      // Enable bloom for dramatic lighting effects
+      this.renderPipeline.bloomEnabled = true;
+      this.renderPipeline.bloomThreshold = 0.8; // Only bright areas bloom
+      this.renderPipeline.bloomWeight = 0.3; // Moderate bloom intensity
+      this.renderPipeline.bloomKernel = 64; // Smooth bloom
+      
+      // Enable tone mapping for better contrast
+      this.renderPipeline.toneMappingEnabled = true;
+      this.renderPipeline.toneMappingType = 1; // ACES tone mapping
+      
+      // Enable image processing for enhanced visuals
+      this.renderPipeline.imageProcessingEnabled = true;
+      if (this.renderPipeline.imageProcessing) {
+        this.renderPipeline.imageProcessing.contrast = 1.3; // Higher contrast
+        this.renderPipeline.imageProcessing.exposure = 1.1; // Slightly brighter
+        this.renderPipeline.imageProcessing.vignetteEnabled = true;
+        this.renderPipeline.imageProcessing.vignetteWeight = 0.3; // Subtle vignette
+        this.renderPipeline.imageProcessing.vignetteColor = new Color3(0, 0, 0.1); // Dark blue vignette
+      }
+      
+      // Enable depth of field for cinematic effect (subtle)
+      this.renderPipeline.depthOfFieldEnabled = true;
+      if (this.renderPipeline.depthOfField) {
+        this.renderPipeline.depthOfField.focusDistance = 10; // Focus distance
+        this.renderPipeline.depthOfField.focalLength = 50; // Focal length
+        this.renderPipeline.depthOfField.fStop = 8; // Subtle blur
+      }
     }
   
     private async setupVR(): Promise<void> {
@@ -551,6 +685,12 @@ import {
   
     public dispose(): void {
       this.stopHeadTracking();
+      
+      // Dispose post-processing pipeline
+      if (this.renderPipeline) {
+        this.renderPipeline.dispose();
+        this.renderPipeline = null;
+      }
       
       // Dispose audio spectrum
       if (this.audioSpectrum) {
