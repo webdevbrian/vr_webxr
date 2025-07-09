@@ -121,7 +121,7 @@ import {
       asphaltTexture.uScale = 4;
       asphaltTexture.vScale = 4;
       
-      groundMaterial.baseTexture = asphaltTexture;
+      groundMaterial.albedoTexture = asphaltTexture;
       groundMaterial.baseColor = new Color3(1, 1, 1); // Pure white to show texture clearly
       groundMaterial.roughness = 0.2; // Smooth for wet look but not mirror-like
       groundMaterial.metallicFactor = 0.7; // High metallic for wet reflection
@@ -179,7 +179,7 @@ import {
       // Load glass/crystal texture for holographic sphere
       const glassTexture = new Texture("https://images.pexels.com/photos/1108101/pexels-photo-1108101.jpeg?auto=compress&cs=tinysrgb&w=512", this.scene);
       
-      sphereMaterial.baseTexture = glassTexture;
+      sphereMaterial.albedoTexture = glassTexture;
       sphereMaterial.baseColor = new Color3(1, 1, 1); // Pure white to show texture
       sphereMaterial.roughness = 0.05; // Very smooth for glass-like appearance
       sphereMaterial.metallicFactor = 0.9;
@@ -202,7 +202,7 @@ import {
       neonTexture.uScale = 3;
       neonTexture.vScale = 1;
       
-      ringMaterial.baseTexture = neonTexture;
+      ringMaterial.albedoTexture = neonTexture;
       ringMaterial.baseColor = new Color3(1, 1, 1); // Pure white to show texture
       ringMaterial.roughness = 0.2; // Slightly rougher for realistic neon material
       ringMaterial.metallicFactor = 0.9;
@@ -231,7 +231,7 @@ import {
         concreteTexture.uScale = 2;
         concreteTexture.vScale = 2;
         
-        platformMaterial.baseTexture = concreteTexture;
+        platformMaterial.albedoTexture = concreteTexture;
         platformMaterial.baseColor = new Color3(1, 1, 1); // Pure white to show texture
         platformMaterial.roughness = 0.4; // Rougher for concrete appearance
         platformMaterial.metallicFactor = 0.8;
@@ -259,7 +259,7 @@ import {
         brushedMetalTexture.uScale = 1;
         brushedMetalTexture.vScale = 4; // Stretch vertically for pillar effect
         
-        pillarMaterial.baseTexture = brushedMetalTexture;
+        pillarMaterial.albedoTexture = brushedMetalTexture;
         pillarMaterial.baseColor = new Color3(1, 1, 1); // Pure white to show texture
         pillarMaterial.roughness = 0.4; // Rougher for brushed metal appearance
         pillarMaterial.metallicFactor = 0.7;
