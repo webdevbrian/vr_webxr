@@ -833,6 +833,13 @@ import {
       crateMaterial.roughness = 0.9; // Very rough wood surface
       crateMaterial.metallicFactor = 0.0; // Non-metallic wood
       crate.material = crateMaterial;
+      
+      // Add physics impostor for interactive wooden crates
+      crate.physicsImpostor = new PhysicsImpostor(crate, PhysicsImpostor.BoxImpostor, {
+        mass: 10, // Moderate mass for wooden crate (interactive)
+        restitution: 0.3, // Moderate bounce for wood
+        friction: 0.8 // High friction for wood on surfaces
+      }, this.scene);
     }
     
     // Create textured floor tiles in different areas
