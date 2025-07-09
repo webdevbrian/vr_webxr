@@ -89,9 +89,6 @@ import {
         this.scene
       );
       this.camera.attachControl(this.canvas, true);
-
-      // Prevent HDR environment texture issues that cause rgbdDecode shader errors
-      this.scene.environmentTexture = null;
   
       // Enable physics if requested
       if (config.enablePhysics) {
@@ -401,18 +398,19 @@ import {
 
     private async loadModels(): Promise<void> {
       try {
-        // Load tank model
+        // Load tank model - positioned on left side and behind current objects
         const tankConfig: ModelConfig = {
-          path: '/models/',
-          fileName: 'tank.gltf',
-          position: new Vector3(-15, 0, -5), // Left side, behind current objects
-          scale: new Vector3(2, 2, 2), // Real-sized for VR viewing
+          path: "/src/models/",
+          fileName: "tank.glb",
+          position: new Vector3(-15, 0, -15), // Left side and behind
+          scale: new Vector3(1.8, 1.8, 1.8), // Realistic tank size for VR
+          rotation: new Vector3(0, Math.PI / 4, 0), // Slight angle for better viewing
           enablePhysics: true,
           physicsType: PhysicsImpostor.BoxImpostor,
-          physicsMass: 0, // Solid, immovable
-          textureBasePath: '/models/textures/texture_tank'
+          physicsMass: 0, // Static/immovable
+          textureBasePath: "/src/models/textures/texture_tank"
         };
-        
+
         await this.modelLoader.loadModel(tankConfig);
         console.log('Tank model loaded successfully');
         
@@ -578,7 +576,7 @@ import {
       // Create default rendering pipeline with advanced effects
       this.renderPipeline = new DefaultRenderingPipeline(
         "defaultPipeline",
-        false, // HDR disabled to prevent shader compilation errors
+        true, // HDR enabled
         this.scene,
         [this.camera]
       );
