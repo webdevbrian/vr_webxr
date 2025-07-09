@@ -554,3 +554,89 @@ import {
       this.engine.dispose();
     }
   }
+  private createAdditionalTexturedObjects(): void {
+    // Create textured wall panels
+    for (let i = 0; i < 3; i++) {
+      const wall = MeshBuilder.CreateBox(`wall${i}`, { 
+        width: 4, 
+        height: 6, 
+        depth: 0.2 
+      }, this.scene);
+      
+      wall.position.set(
+        -15 + (i * 8),
+        3,
+        -12
+      );
+      
+      const wallMaterial = new PBRMaterial(`wallMaterial${i}`, this.scene);
+      
+      // Load brick/concrete wall texture
+      const wallTexture = new Texture("https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg?auto=compress&cs=tinysrgb&w=512", this.scene);
+      wallTexture.uScale = 2;
+      wallTexture.vScale = 3;
+      
+      wallMaterial.albedoTexture = wallTexture;
+      wallMaterial.baseColor = new Color3(0.8, 0.8, 0.9); // Slight blue tint
+      wallMaterial.roughness = 0.8; // Rough concrete surface
+      wallMaterial.metallicFactor = 0.1; // Non-metallic
+      wall.material = wallMaterial;
+    }
+    
+    // Create textured crates/boxes
+    for (let i = 0; i < 4; i++) {
+      const crate = MeshBuilder.CreateBox(`crate${i}`, { 
+        width: 1.5, 
+        height: 1.5, 
+        depth: 1.5 
+      }, this.scene);
+      
+      crate.position.set(
+        -8 + (i * 4),
+        0.75,
+        5
+      );
+      
+      const crateMaterial = new PBRMaterial(`crateMaterial${i}`, this.scene);
+      
+      // Load wood crate texture
+      const crateTexture = new Texture("https://images.pexels.com/photos/129731/pexels-photo-129731.jpeg?auto=compress&cs=tinysrgb&w=512", this.scene);
+      crateTexture.uScale = 1;
+      crateTexture.vScale = 1;
+      
+      crateMaterial.albedoTexture = crateTexture;
+      crateMaterial.baseColor = new Color3(1, 1, 1);
+      crateMaterial.roughness = 0.9; // Very rough wood surface
+      crateMaterial.metallicFactor = 0.0; // Non-metallic wood
+      crate.material = crateMaterial;
+    }
+    
+    // Create textured floor tiles in different areas
+    for (let i = 0; i < 6; i++) {
+      const tile = MeshBuilder.CreateBox(`tile${i}`, { 
+        width: 3, 
+        height: 0.1, 
+        depth: 3 
+      }, this.scene);
+      
+      const angle = (i * Math.PI * 2) / 6;
+      tile.position.set(
+        Math.cos(angle) * 12,
+        0.05,
+        Math.sin(angle) * 12
+      );
+      
+      const tileMaterial = new PBRMaterial(`tileMaterial${i}`, this.scene);
+      
+      // Load tile texture
+      const tileTexture = new Texture("https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg?auto=compress&cs=tinysrgb&w=512", this.scene);
+      tileTexture.uScale = 2;
+      tileTexture.vScale = 2;
+      
+      tileMaterial.albedoTexture = tileTexture;
+      tileMaterial.baseColor = new Color3(0.9, 0.9, 1.0); // Slight blue tint
+      tileMaterial.roughness = 0.3; // Smooth tiles
+      tileMaterial.metallicFactor = 0.2; // Slightly reflective
+      tile.material = tileMaterial;
+    }
+  }
