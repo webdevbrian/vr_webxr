@@ -40,7 +40,12 @@ import {
   
     constructor(canvas: HTMLCanvasElement, config: VRSceneConfig) {
       this.canvas = canvas;
-      this.engine = new Engine(canvas, true);
+      this.engine = new Engine(canvas, true, { 
+        preserveDrawingBuffer: true, 
+        stencil: true,
+        antialias: true,
+        alpha: false
+      });
       this.scene = new Scene(this.engine);
       
       this.vrSessionData = {
