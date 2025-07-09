@@ -91,11 +91,19 @@ import {
       const skybox = MeshBuilder.CreateSphere("skyBox", { diameter: 100 }, this.scene);
       const skyboxMaterial = new PBRMaterial("skyboxMaterial", this.scene);
       
+      // Load sunset background texture
+      const sunsetTexture = new Texture("https://images.pexels.com/photos/158163/clouds-cloudporn-weather-lookup-158163.jpeg?auto=compress&cs=tinysrgb&w=1024", this.scene);
+      sunsetTexture.uOffset = 0;
+      sunsetTexture.vOffset = 0;
+      sunsetTexture.wrapU = Constants.TEXTURE_MIRROR_ADDRESSMODE;
+      sunsetTexture.wrapV = Constants.TEXTURE_MIRROR_ADDRESSMODE;
+      
       skyboxMaterial.backFaceCulling = false;
-      skyboxMaterial.baseColor = new Color3(0.05, 0.05, 0.1); // Very dark blue
+      skyboxMaterial.albedoTexture = sunsetTexture;
+      skyboxMaterial.baseColor = new Color3(1, 1, 1); // Pure white to show texture clearly
       skyboxMaterial.roughness = 1.0;
       skyboxMaterial.metallicFactor = 0.0;
-      skyboxMaterial.emissiveColor = new Color3(0.02, 0.02, 0.05); // Subtle dark glow
+      skyboxMaterial.emissiveColor = new Color3(0, 0, 0); // No emissive to show texture
       skybox.material = skyboxMaterial;
       skybox.infiniteDistance = true;
     }
