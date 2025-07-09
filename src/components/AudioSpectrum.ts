@@ -63,18 +63,18 @@ export class AudioSpectrum {
       const progress = i / (this.config.bandCount - 1);
       const baseColor = this.getCyberpunkColor(progress);
       
-      material.baseColor = new Color3(baseColor.r * 0.2, baseColor.g * 0.2, baseColor.b * 0.2);
-      material.roughness = 0.1;
+      material.baseColor = new Color3(baseColor.r * 0.4, baseColor.g * 0.4, baseColor.b * 0.4); // Brighter base for more bloom
+      material.roughness = 0.05; // Even smoother for more reflective glow
       material.metallicFactor = 0.9;
-      material.emissiveColor = new Color3(baseColor.r * 0.5, baseColor.g * 0.5, baseColor.b * 0.5);
+      material.emissiveColor = new Color3(baseColor.r * 1.5, baseColor.g * 1.5, baseColor.b * 1.5); // Much stronger initial glow
       
       bar.material = material;
       
       // Create point light for each spectrum bar
       const light = new PointLight(`spectrumLight_${i}`, bar.position.clone(), this.scene);
       light.diffuse = new Color3(baseColor.r, baseColor.g, baseColor.b);
-      light.intensity = 0.5;
-      light.range = 8;
+      light.intensity = 3.0; // Much brighter initial intensity
+      light.range = 15; // Larger range for more bloom spread
       
       this.spectrumBars.push(bar);
       this.materials.push(material);
@@ -207,19 +207,20 @@ export class AudioSpectrum {
       // Update light position to follow bar
       light.position.y = bar.position.y + targetHeight / 2;
       
-      // Update emissive color and light intensity for glow effect
-      const baseEmissive = 0.3;
-      const emissiveIntensity = baseEmissive + (intensity * 1.2);
+      // Update emissive color and light intensity for MUCH stronger glow effect
+      const baseEmissive = 0.8; // Much higher base glow
+      const emissiveIntensity = baseEmissive + (intensity * 3.5); // Much stronger intensity multiplier
       const baseColor = material.baseColor;
       
       material.emissiveColor = new Color3(
-        (baseColor.r / 0.2) * emissiveIntensity,
-        (baseColor.g / 0.2) * emissiveIntensity,
-        (baseColor.b / 0.2) * emissiveIntensity
+        (baseColor.r / 0.2) * emissiveIntensity * 2.0, // Double the emissive strength
+        (baseColor.g / 0.2) * emissiveIntensity * 2.0,
+        (baseColor.b / 0.2) * emissiveIntensity * 2.0
       );
       
-      // Update light intensity based on audio
-      light.intensity = 0.5 + (intensity * 2.0); // More dramatic lighting
+      // Update light intensity based on audio - MUCH brighter for bloom
+      light.intensity = 2.0 + (intensity * 8.0); // Extremely bright for maximum bloom
+      light.range = 12 + (intensity * 8); // Dynamic range based on intensity
       
       // Subtle rotation for visual interest
       bar.rotation.y += 0.005 * (1 + intensity);
@@ -250,18 +251,19 @@ export class AudioSpectrum {
         // Update light position
         light.position.y = bar.position.y + targetHeight / 2;
         
-        // Update glow
+        // Update glow - much stronger for fallback animation too
         const baseColor = material.baseColor;
-        const emissiveIntensity = 0.3 + (intensity * 0.5);
+        const emissiveIntensity = 1.2 + (intensity * 2.0); // Much stronger fallback glow
         
         material.emissiveColor = new Color3(
-          (baseColor.r / 0.2) * emissiveIntensity,
-          (baseColor.g / 0.2) * emissiveIntensity,
-          (baseColor.b / 0.2) * emissiveIntensity
+          (baseColor.r / 0.4) * emissiveIntensity * 1.8, // Stronger fallback emissive
+          (baseColor.g / 0.4) * emissiveIntensity * 1.8,
+          (baseColor.b / 0.4) * emissiveIntensity * 1.8
         );
         
         // Update light intensity
-        light.intensity = 0.5 + (intensity * 1.5);
+        light.intensity = 2.5 + (intensity * 4.0); // Much brighter fallback lighting
+        light.range = 12 + (intensity * 6); // Dynamic range for fallback too
         
         bar.rotation.y += 0.002;
       }
