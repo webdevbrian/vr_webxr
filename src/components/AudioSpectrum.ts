@@ -105,11 +105,11 @@ export class AudioSpectrum {
       // Particle appearance
       particleSystem.color1 = new Color3(baseColor.r, baseColor.g, baseColor.b);
       particleSystem.color2 = new Color3(baseColor.r * 0.8, baseColor.g * 0.8, baseColor.b * 0.8);
-      particleSystem.colorDead = new Color3(baseColor.r * 0.2, baseColor.g * 0.2, baseColor.b * 0.2);
+      particleSystem.colorDead = new Color3(0, 0, 0); // Fade to black (transparent)
       
       // Particle size
-      particleSystem.minSize = 0.1;
-      particleSystem.maxSize = 0.4;
+      particleSystem.minSize = 0.02;
+      particleSystem.maxSize = 0.08;
       
       // Particle lifetime
       particleSystem.minLifeTime = 0.8;
@@ -291,8 +291,8 @@ export class AudioSpectrum {
         particleSystem.maxEmitPower = 6 + (intensity * 15);
         
         // Make particles larger and brighter with more audio activity
-        particleSystem.minSize = 0.1 + (intensity * 0.3);
-        particleSystem.maxSize = 0.4 + (intensity * 0.8);
+        particleSystem.minSize = 0.02 + (intensity * 0.06);
+        particleSystem.maxSize = 0.08 + (intensity * 0.12);
         
         // Update particle colors to be brighter with more intensity
         const baseColor = this.getCyberpunkColor(i / (this.config.bandCount - 1));
@@ -362,8 +362,8 @@ export class AudioSpectrum {
           particleSystem.emitRate = 15 + (intensity * 80); // Moderate particle emission for fallback
           particleSystem.minEmitPower = 2 + (intensity * 4);
           particleSystem.maxEmitPower = 6 + (intensity * 8);
-          particleSystem.minSize = 0.1 + (intensity * 0.2);
-          particleSystem.maxSize = 0.4 + (intensity * 0.5);
+          particleSystem.minSize = 0.02 + (intensity * 0.04);
+          particleSystem.maxSize = 0.08 + (intensity * 0.08);
           
           // Update emitter position for fallback
           particleSystem.minEmitBox = new Vector3(-0.2, targetHeight - 0.3, -0.2);
