@@ -77,7 +77,13 @@ import {
       );
       this.camera.attachControl(this.canvas, true);
   
-      this.setupCyberpunkLighting();
+      // Enable physics if requested
+      if (config.enablePhysics) {
+        this.scene.enablePhysics(new Vector3(0, -9.81, 0), new CannonJSPlugin(true, 10, CANNON));
+      }
+
+      // Create dark cyberpunk skybox
+      this.createCyberpunkSkybox();
     }
   
     private createCyberpunkSkybox(): void {
@@ -100,6 +106,7 @@ import {
       // Create cyberpunk objects
       this.createCyberpunkObjects();
       this.createCyberpunkStructures();
+      this.setupReflections();
     }
   
     private createWetStreetGround(): void {
