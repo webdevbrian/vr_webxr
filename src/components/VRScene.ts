@@ -338,9 +338,29 @@ import {
         new Vector3(-0.3, -1, -0.7), // More angled for dramatic shadows
         this.scene
       );
-      directionalLight.intensity = 1.2; // Much stronger for contrast
+      directionalLight.intensity = 1.8; // Even stronger for more bloom
       directionalLight.position = new Vector3(8, 15, 8);
       directionalLight.diffuse = new Color3(1.0, 0.9, 0.7); // Warm directional light
+      
+      // Add secondary directional light for cross-lighting
+      const directionalLight2 = new DirectionalLight(
+        "directionalLight2",
+        new Vector3(0.5, -1, 0.3),
+        this.scene
+      );
+      directionalLight2.intensity = 1.0;
+      directionalLight2.position = new Vector3(-10, 12, -5);
+      directionalLight2.diffuse = new Color3(0.6, 0.8, 1.0); // Cool blue directional light
+      
+      // Add third directional light for rim lighting
+      const directionalLight3 = new DirectionalLight(
+        "directionalLight3",
+        new Vector3(0.8, -0.5, -0.2),
+        this.scene
+      );
+      directionalLight3.intensity = 0.8;
+      directionalLight3.position = new Vector3(12, 8, 10);
+      directionalLight3.diffuse = new Color3(1.0, 0.4, 0.8); // Pink rim light
   
       // High-quality shadow generator for dramatic shadows
       const shadowGenerator = new ShadowGenerator(2048, directionalLight); // Higher resolution
@@ -374,7 +394,7 @@ import {
         this.scene
       );
       keyLight.diffuse = new Color3(1.0, 0.8, 0.6); // Warm key light
-      keyLight.intensity = 3.0; // Very bright for drama
+      keyLight.intensity = 4.5; // Much brighter for stronger bloom
       keyLight.range = 25;
       
       // Rim light for silhouette enhancement
@@ -387,7 +407,7 @@ import {
         this.scene
       );
       rimLight.diffuse = new Color3(0.3, 0.7, 1.0); // Cool rim light
-      rimLight.intensity = 2.5;
+      rimLight.intensity = 3.8; // Brighter for more bloom
       rimLight.range = 20;
       
       // Fill light (subtle, opposite side)
@@ -400,8 +420,33 @@ import {
         this.scene
       );
       fillLight.diffuse = new Color3(0.4, 0.5, 0.8); // Cool fill light
-      fillLight.intensity = 0.8; // Much dimmer than key light
+      fillLight.intensity = 1.2; // Brighter for more overall illumination
       fillLight.range = 18;
+      
+      // Add additional directional spot lights for dramatic effect
+      const dramaticSpot1 = new SpotLight(
+        "dramaticSpot1",
+        new Vector3(-20, 15, 0),
+        new Vector3(1, -0.8, 0),
+        Math.PI / 5,
+        5,
+        this.scene
+      );
+      dramaticSpot1.diffuse = new Color3(1.0, 0.3, 0.1); // Orange dramatic light
+      dramaticSpot1.intensity = 5.0; // Very bright for strong bloom
+      dramaticSpot1.range = 30;
+      
+      const dramaticSpot2 = new SpotLight(
+        "dramaticSpot2",
+        new Vector3(20, 15, 0),
+        new Vector3(-1, -0.8, 0),
+        Math.PI / 5,
+        5,
+        this.scene
+      );
+      dramaticSpot2.diffuse = new Color3(0.1, 0.3, 1.0); // Blue dramatic light
+      dramaticSpot2.intensity = 5.0; // Very bright for strong bloom
+      dramaticSpot2.range = 30;
       
       // Accent lights for specific objects
       this.createAccentLights();
@@ -418,7 +463,7 @@ import {
         this.scene
       );
       spotLight1.diffuse = new Color3(0, 1, 1); // Cyan to match sphere
-      spotLight1.intensity = 4.0;
+      spotLight1.intensity = 6.0; // Much brighter for bloom
       spotLight1.range = 15;
       
       // Accent light for the ring
@@ -431,11 +476,25 @@ import {
         this.scene
       );
       spotLight2.diffuse = new Color3(1, 0, 1); // Magenta to match ring
-      spotLight2.intensity = 3.5;
+      spotLight2.intensity = 5.5; // Much brighter for bloom
       spotLight2.range = 12;
       
       // Ground uplighting for dramatic effect
       for (let i = 0; i < 4; i++) {
+        // Add more intense uplights for bloom
+        const intenseUpLight = new PointLight(
+          `intenseUpLight${i}`,
+          new Vector3(
+            Math.cos(i * Math.PI / 2) * 6,
+            1.0,
+            Math.sin(i * Math.PI / 2) * 6
+          ),
+          this.scene
+        );
+        intenseUpLight.diffuse = new Color3(0.8, 0.2, 1.0); // Bright purple
+        intenseUpLight.intensity = 4.0; // Very bright for bloom
+        intenseUpLight.range = 15;
+        
         const upLight = new PointLight(
           `upLight${i}`,
           new Vector3(
@@ -446,9 +505,28 @@ import {
           this.scene
         );
         upLight.diffuse = new Color3(0.2, 0.4, 1.0); // Cool blue uplight
-        upLight.intensity = 1.5;
+        upLight.intensity = 2.5; // Brighter for more bloom
         upLight.range = 12;
       }
+      
+      // Add high-intensity accent lights for maximum bloom
+      const bloomLight1 = new PointLight(
+        "bloomLight1",
+        new Vector3(0, 5, 0), // Center high light
+        this.scene
+      );
+      bloomLight1.diffuse = new Color3(1.0, 1.0, 0.8); // Bright white-yellow
+      bloomLight1.intensity = 8.0; // Extremely bright for maximum bloom
+      bloomLight1.range = 20;
+      
+      const bloomLight2 = new PointLight(
+        "bloomLight2",
+        new Vector3(-6, 4, 0), // Ring area
+        this.scene
+      );
+      bloomLight2.diffuse = new Color3(1.0, 0.2, 1.0); // Bright magenta
+      bloomLight2.intensity = 7.0; // Very bright for bloom
+      bloomLight2.range = 18;
     }
     
     private createVolumetricLighting(): void {
@@ -481,9 +559,10 @@ import {
       
       // Enable bloom for dramatic lighting effects
       this.renderPipeline.bloomEnabled = true;
-      this.renderPipeline.bloomThreshold = 0.8; // Only bright areas bloom
-      this.renderPipeline.bloomWeight = 0.3; // Moderate bloom intensity
-      this.renderPipeline.bloomKernel = 64; // Smooth bloom
+      this.renderPipeline.bloomThreshold = 0.6; // Lower threshold for more bloom
+      this.renderPipeline.bloomWeight = 0.6; // Much stronger bloom intensity
+      this.renderPipeline.bloomKernel = 128; // Larger kernel for more spread
+      this.renderPipeline.bloomScale = 0.8; // Scale for bloom effect
       
       // Enable tone mapping for better contrast
       this.renderPipeline.toneMappingEnabled = true;
@@ -492,8 +571,8 @@ import {
       // Enable image processing for enhanced visuals
       this.renderPipeline.imageProcessingEnabled = true;
       if (this.renderPipeline.imageProcessing) {
-        this.renderPipeline.imageProcessing.contrast = 1.3; // Higher contrast
-        this.renderPipeline.imageProcessing.exposure = 1.1; // Slightly brighter
+        this.renderPipeline.imageProcessing.contrast = 1.4; // Even higher contrast for bloom
+        this.renderPipeline.imageProcessing.exposure = 1.3; // Brighter exposure for bloom
         this.renderPipeline.imageProcessing.vignetteEnabled = true;
         this.renderPipeline.imageProcessing.vignetteWeight = 0.3; // Subtle vignette
         this.renderPipeline.imageProcessing.vignetteColor = new Color3(0, 0, 0.1); // Dark blue vignette
