@@ -59,7 +59,7 @@ import {
       };
   
       this.setupScene(config);
-      this.createEnvironment();
+      this.createCyberpunkEnvironment();
       this.setupLighting();
       this.setupAudioSpectrum();
       this.setupVR();
@@ -77,13 +77,7 @@ import {
       );
       this.camera.attachControl(this.canvas, true);
   
-      // Enable physics if requested
-      if (config.enablePhysics) {
-        this.scene.enablePhysics(new Vector3(0, -9.81, 0), new CannonJSPlugin(true, 10, CANNON));
-      }
-  
-      // Create dark cyberpunk skybox
-      this.createCyberpunkSkybox();
+      this.setupCyberpunkLighting();
     }
   
     private createCyberpunkSkybox(): void {
