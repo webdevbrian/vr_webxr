@@ -113,7 +113,7 @@ export const VRInterface: React.FC<VRInterfaceProps> = ({
           </div>
           <p className="text-sm text-gray-700">{deviceInfo}</p>
           <p className="text-xs text-gray-500 mt-1">
-            Make sure your Vjaro Aero headset is connected and Steam VR is running
+            Make sure your headset is connected and Steam VR is running.
           </p>
         </div>
       )}
